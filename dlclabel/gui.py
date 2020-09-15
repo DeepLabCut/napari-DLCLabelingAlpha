@@ -17,7 +17,8 @@ class DLCViewer(napari.Viewer):
         super(DLCViewer, self).__init__(title='deeplabcut')
         self.theme = 'light'
         self.class_keymap.update(super(DLCViewer, self).class_keymap)
-        self.layers.events.changed.connect(self.on_change)
+        self.layers.events.added.connect(self.on_add)
+        self.layers.events.removed.connect(self.on_remove)
         self._dropdown_menus = []
 
         # Hack the QSS style sheet to add a KeyPoints layer type icon
@@ -35,34 +36,33 @@ class DLCViewer(napari.Viewer):
     def n_steps(self):
         return self.dims.nsteps[0]
 
-    def on_change(self, event):
-        if event.type != 'reordered':
-            layer = event.item
-            if isinstance(layer, KeyPoints):
-                if event.type == 'added':
-                    menu = DualDropdownMenu(layer)
-                    self._dropdown_menus.append(
-                        self.window.add_dock_widget(menu, area='bottom')
-                    )
-                    layer.smart_reset(event=None)  # Update current_label upon loading data
-                    self.bind_key('Down', layer.next_keypoint, overwrite=True)
-                    self.bind_key('Up', layer.prev_keypoint, overwrite=True)
-
-                    # Pass the image paths to the KeyPoints layer
-                    images_layer = get_first_layer_of_type(self.layers, Image)
-                    if images_layer is not None:
-                        layer._remap_frame_indices(images_layer.metadata['paths'])
-
-                elif event.type == 'removed':
-                    while self._dropdown_menus:
-                        menu = self._dropdown_menus.pop()
-                        self.window.remove_dock_widget(menu)
-            elif isinstance(layer, Image) and event.type == 'added':
-                # Ensure the images are always underneath the points
+    def on_add(self, event):
+        layer = event.item
+        if isinstance(layer, KeyPoints):
+            menu = DualDropdownMenu(layer)
+            self._dropdown_menus.append(
+                self.window.add_dock_widget(menu, area='bottom')
+            )
+            layer.smart_reset(event=None)  # Update current_label upon loading data
+            self.bind_key('Down', layer.next_keypoint, overwrite=True)
+            self.bind_key('Up', layer.prev_keypoint, overwrite=True)
+            # Pass the image paths to the KeyPoints layer
+            images_layer = get_first_layer_of_type(self.layers, Image)
+            if images_layer is not None:
+                layer._remap_frame_indices(images_layer.metadata['paths'])
+        elif isinstance(layer, Image):
+            if len(self.layers) > 1:
                 self.layers.move_selected(index=-1, insert=0)
-                keypoints_layer = get_first_layer_of_type(self.layers, KeyPoints)
-                if keypoints_layer is not None:
-                    keypoints_layer._remap_frame_indices(layer.metadata['paths'])
+            keypoints_layer = get_first_layer_of_type(self.layers, KeyPoints)
+            if keypoints_layer is not None:
+                keypoints_layer._remap_frame_indices(layer.metadata['paths'])
+
+    def on_remove(self, event):
+        layer = event.item
+        if isinstance(layer, KeyPoints):
+            while self._dropdown_menus:
+                menu = self._dropdown_menus.pop()
+                self.window.remove_dock_widget(menu)
 
     def add_points(
         self,
