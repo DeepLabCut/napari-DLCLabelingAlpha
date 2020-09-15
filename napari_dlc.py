@@ -28,3 +28,8 @@ def load_config(path):
 @napari_hook_implementation(tryfirst=True, specname='napari_write_points')
 def save_keypoints(path, data, meta):
     return io.write_hdf(path, data, meta)
+
+
+@napari_hook_implementation(tryfirst=True, specname='napari_write_shapes')
+def save_masks(path, data, meta):
+    return io.write_masks(path, data, meta)

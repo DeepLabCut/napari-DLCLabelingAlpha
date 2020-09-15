@@ -4,10 +4,9 @@ from dlclabel.io import handle_path
 from dlclabel.layers import KeyPoints
 from dlclabel.misc import get_first_layer_of_type
 from dlclabel.widgets import DualDropdownMenu
-from napari.layers import Image
+from napari.layers import Image, Shapes
 
 
-# TODO Draw polygon on area on mouse drag
 # TODO Add vectors for paths trajectory
 # TODO Add video reader plugin
 
@@ -28,6 +27,11 @@ class DLCViewer(napari.Viewer):
         self.window.raw_stylesheet += missing_style
         self.window._update_palette(None)
 
+        # Storage for extra image metadata that are relevant to other layers.
+        # These are updated anytime images are added to the Viewer
+        # and passed on to the other layers upon creation.
+        self._images_info = dict()
+
     @property
     def current_step(self):
         return self.dims.current_step[0]
@@ -38,7 +42,16 @@ class DLCViewer(napari.Viewer):
 
     def on_add(self, event):
         layer = event.item
-        if isinstance(layer, KeyPoints):
+        if isinstance(layer, Image):
+            if len(self.layers) > 1:
+                # Ensure the images are always underneath the other layers
+                self.layers.move_selected(index=-1, insert=0)
+            self._images_info.update({'paths': layer.metadata['paths'],
+                                      'shape': layer.shape})
+            keypoints_layer = get_first_layer_of_type(self.layers, KeyPoints)
+            if keypoints_layer is not None:
+                keypoints_layer._remap_frame_indices(layer.metadata['paths'])
+        elif isinstance(layer, KeyPoints):
             menu = DualDropdownMenu(layer)
             self._dropdown_menus.append(
                 self.window.add_dock_widget(menu, area='bottom')
@@ -50,16 +63,18 @@ class DLCViewer(napari.Viewer):
             images_layer = get_first_layer_of_type(self.layers, Image)
             if images_layer is not None:
                 layer._remap_frame_indices(images_layer.metadata['paths'])
-        elif isinstance(layer, Image):
-            if len(self.layers) > 1:
-                self.layers.move_selected(index=-1, insert=0)
-            keypoints_layer = get_first_layer_of_type(self.layers, KeyPoints)
-            if keypoints_layer is not None:
-                keypoints_layer._remap_frame_indices(layer.metadata['paths'])
+        elif isinstance(layer, Shapes):
+            layer.metadata['shape'] = self._images_info['shape'][1:]
+
+    # def pass_images_metadata(self, image_layer):
+    #     self._images_info.update({'paths': image_layer.metadata['paths'],
+    #                               'shape': image_layer.shape})
+    #     for layer in self.layers:
+    #         if not isinstance(layer, Image):
+    #             layer.metadata.update(self._images_info)
 
     def on_remove(self, event):
-        layer = event.item
-        if isinstance(layer, KeyPoints):
+        if isinstance(event.item, KeyPoints):
             while self._dropdown_menus:
                 menu = self._dropdown_menus.pop()
                 self.window.remove_dock_widget(menu)
@@ -90,6 +105,7 @@ class DLCViewer(napari.Viewer):
         blending='translucent',
         visible=True,
     ):
+        # Disable the creation of Points layers via the button
         if not properties:
             return
 
