@@ -5,6 +5,7 @@ import pims
 import yaml
 from dask_image.imread import imread
 from dlclabel import misc
+from itertools import groupby
 from napari.layers import Shapes
 from napari.plugins._builtins import napari_write_shapes
 from skimage.io import imsave
@@ -152,11 +153,20 @@ def write_hdf(filename, data, metadata):
 def write_masks(foldername, data, metadata):
     folder, _ = os.path.splitext(foldername)
     os.makedirs(folder, exist_ok=True)
-    filename = os.path.join(folder, '{}.png')
+    filename = os.path.join(folder, '{}_obj_{}.png')
     shapes = Shapes(data, shape_type='polygon')
-    masks = shapes.to_masks(mask_shape=metadata['metadata']['shape'][1:])
+    meta = metadata['metadata']
+    frame_inds = [int(array[0, 0]) for array in data]
+    shape_inds = []
+    for _, group in groupby(frame_inds):
+        shape_inds += range(sum(1 for _ in group))
+    masks = shapes.to_masks(mask_shape=meta['shape'][1:])
     for n, mask in enumerate(masks):
-        imsave(filename.format(n),
+        image_name = os.path.basename(meta['paths'][frame_inds[n]])
+        output_path = filename.format(
+            os.path.splitext(image_name)[0], shape_inds[n]
+        )
+        imsave(output_path,
                img_as_ubyte(mask).squeeze(),
                check_contrast=False)
     napari_write_shapes(os.path.join(folder, 'vertices.csv'), data, metadata)
