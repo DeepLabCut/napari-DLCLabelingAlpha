@@ -66,7 +66,6 @@ class DLCViewer(napari.Viewer):
 
         new_paths = self._images_meta['paths']
         paths = layer.metadata.get('paths')
-        # FIXME Handle list of data (e.g., Shapes layer)
         if paths is not None and np.any(layer.data):
             paths_map = dict(zip(range(len(paths)), paths))
             # Discard data if there are missing frames
@@ -74,17 +73,24 @@ class DLCViewer(napari.Viewer):
                 i for i, path in paths_map.items() if path not in new_paths
             ]
             if missing:
-                inds_to_remove = np.isin(layer.data[:, 0], missing)
-                layer.selected_data = np.flatnonzero(inds_to_remove)
+                if isinstance(layer.data, list):
+                    inds_to_remove = [i for i, verts in enumerate(layer.data)
+                                      if verts[0, 0] in missing]
+                else:
+                    inds_to_remove = np.flatnonzero(np.isin(layer.data[:, 0], missing))
+                layer.selected_data = inds_to_remove
                 layer.remove_selected()
                 for i in missing:
                     paths_map.pop(i)
 
             # Check now whether there are new frames
-            data = layer.data
-            old_inds = data[:, 0]
             temp = {k: new_paths.index(v) for k, v in paths_map.items()}
-            data[:, 0] = np.vectorize(temp.get)(old_inds)
+            data = layer.data
+            if isinstance(data, list):
+                for verts in data:
+                    verts[:, 0] = np.vectorize(temp.get)(verts[:, 0])
+            else:
+                data[:, 0] = np.vectorize(temp.get)(data[:, 0])
             layer.data = data
         layer.metadata.update(self._images_meta)
 
