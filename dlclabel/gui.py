@@ -2,9 +2,8 @@ import napari
 import numpy as np
 from dlclabel.io import handle_path
 from dlclabel.layers import KeyPoints
-from dlclabel.misc import get_first_layer_of_type
 from dlclabel.widgets import DualDropdownMenu
-from napari.layers import Image, Shapes
+from napari.layers import Image
 
 
 # TODO Add vectors for paths trajectory
@@ -30,7 +29,7 @@ class DLCViewer(napari.Viewer):
         # Storage for extra image metadata that are relevant to other layers.
         # These are updated anytime images are added to the Viewer
         # and passed on to the other layers upon creation.
-        self._images_info = dict()
+        self._images_meta = dict()
 
     @property
     def current_step(self):
@@ -43,14 +42,15 @@ class DLCViewer(napari.Viewer):
     def on_add(self, event):
         layer = event.item
         if isinstance(layer, Image):
-            if len(self.layers) > 1:
-                # Ensure the images are always underneath the other layers
-                self.layers.move_selected(index=-1, insert=0)
-            self._images_info.update({'paths': layer.metadata['paths'],
+            # Store the metadata and pass them on to the other layers
+            self._images_meta.update({'paths': layer.metadata['paths'],
                                       'shape': layer.shape})
-            keypoints_layer = get_first_layer_of_type(self.layers, KeyPoints)
-            if keypoints_layer is not None:
-                keypoints_layer._remap_frame_indices(layer.metadata['paths'])
+            for layer in self.layers:
+                if not isinstance(layer, Image):
+                    self._remap_frame_indices(layer)
+            # Ensure the images are always underneath the other layers
+            if len(self.layers) > 1:
+                self.layers.move_selected(index=-1, insert=0)
         elif isinstance(layer, KeyPoints):
             menu = DualDropdownMenu(layer)
             self._dropdown_menus.append(
@@ -59,25 +59,43 @@ class DLCViewer(napari.Viewer):
             layer.smart_reset(event=None)  # Update current_label upon loading data
             self.bind_key('Down', layer.next_keypoint, overwrite=True)
             self.bind_key('Up', layer.prev_keypoint, overwrite=True)
-            # Pass the image paths to the KeyPoints layer
-            images_layer = get_first_layer_of_type(self.layers, Image)
-            if images_layer is not None:
-                layer._remap_frame_indices(images_layer.metadata['paths'])
-        elif isinstance(layer, Shapes):
-            layer.metadata['shape'] = self._images_info['shape'][1:]
 
-    # def pass_images_metadata(self, image_layer):
-    #     self._images_info.update({'paths': image_layer.metadata['paths'],
-    #                               'shape': image_layer.shape})
-    #     for layer in self.layers:
-    #         if not isinstance(layer, Image):
-    #             layer.metadata.update(self._images_info)
+    def _remap_frame_indices(self, layer):
+        if not self._images_meta:
+            return
+
+        new_paths = self._images_meta['paths']
+        paths = layer.metadata.get('paths')
+        # FIXME Handle list of data (e.g., Shapes layer)
+        if paths is not None and np.any(layer.data):
+            paths_map = dict(zip(range(len(paths)), paths))
+            # Discard data if there are missing frames
+            missing = [
+                i for i, path in paths_map.items() if path not in new_paths
+            ]
+            if missing:
+                inds_to_remove = np.isin(layer.data[:, 0], missing)
+                layer.selected_data = np.flatnonzero(inds_to_remove)
+                layer.remove_selected()
+                for i in missing:
+                    paths_map.pop(i)
+
+            # Check now whether there are new frames
+            data = layer.data
+            old_inds = data[:, 0]
+            temp = {k: new_paths.index(v) for k, v in paths_map.items()}
+            data[:, 0] = np.vectorize(temp.get)(old_inds)
+            layer.data = data
+        layer.metadata.update(self._images_meta)
 
     def on_remove(self, event):
-        if isinstance(event.item, KeyPoints):
+        layer = event.item
+        if isinstance(layer, KeyPoints):
             while self._dropdown_menus:
                 menu = self._dropdown_menus.pop()
                 self.window.remove_dock_widget(menu)
+        elif isinstance(layer, Image):
+            self._images_meta = dict()
 
     def add_points(
         self,
@@ -152,6 +170,11 @@ class DLCViewer(napari.Viewer):
         self.add_layer(layer)
         layer.mode = 'add'
         return layer
+
+    def add_layer(self, layer):
+        if not isinstance(layer, Image):
+            self._remap_frame_indices(layer)
+        return super(DLCViewer, self).add_layer(layer)
 
     def open(self,
         path,

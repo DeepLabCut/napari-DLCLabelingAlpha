@@ -24,15 +24,6 @@ def build_color_cycle(n_colors, colormap='viridis'):
     return cmap.map(np.linspace(0, 1, n_colors))
 
 
-def get_first_layer_of_type(layers, type_):
-    target = None
-    for layer in layers:
-        if isinstance(layer, type_):
-            target = layer
-            break
-    return target
-
-
 class DLCHeader:
     def __init__(self, columns):
         self.columns = columns

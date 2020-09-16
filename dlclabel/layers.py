@@ -57,29 +57,6 @@ class KeyPoints(Points):
         self.edge_color_cycle_map = {True: np.array([0, 0, 0, 1]),
                                      False: np.array([1, 0, 0, 1])}
 
-    def _remap_frame_indices(self, new_paths):
-        paths = self.metadata['paths']
-        if paths:
-            paths_map = dict(zip(range(len(paths)), paths))
-            # Discard data if there are missing frames
-            missing = [
-                i for i, path in paths_map.items() if path not in new_paths
-            ]
-            if missing:
-                inds_to_remove = np.isin(self.data[:, 0], missing)
-                self.selected_data = np.flatnonzero(inds_to_remove)
-                self.remove_selected()
-                for i in missing:
-                    paths_map.pop(i)
-
-            # Check now whether there are new frames
-            data = self.data
-            old_inds = data[:, 0]
-            temp = {k: new_paths.index(v) for k, v in paths_map.items()}
-            data[:, 0] = np.vectorize(temp.get)(old_inds)
-            self.data = data
-        self.metadata['paths'] = new_paths
-
     @Points.bind_key('E')
     def toggle_edge_color(self):
         self.edge_width ^= 2  # Trick to toggle between 0 and 2

@@ -154,7 +154,7 @@ def write_masks(foldername, data, metadata):
     os.makedirs(folder, exist_ok=True)
     filename = os.path.join(folder, '{}.png')
     shapes = Shapes(data, shape_type='polygon')
-    masks = shapes.to_masks(mask_shape=metadata['metadata']['shape'])
+    masks = shapes.to_masks(mask_shape=metadata['metadata']['shape'][1:])
     for n, mask in enumerate(masks):
         imsave(filename.format(n),
                img_as_ubyte(mask).squeeze(),
