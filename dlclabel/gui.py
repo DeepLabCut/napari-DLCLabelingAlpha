@@ -34,8 +34,11 @@ class DLCViewer(napari.Viewer):
         if event.type == 'added':
             layer = event.item
             if isinstance(layer, Image):
+                paths = layer.metadata.get('paths')
+                if paths is None:
+                    return
                 # Store the metadata and pass them on to the other layers
-                self._images_meta.update({'paths': layer.metadata['paths'],
+                self._images_meta.update({'paths': paths,
                                           'shape': layer.shape})
                 for layer_ in self.layers:
                     if not isinstance(layer_, Image):
@@ -199,9 +202,6 @@ class DLCViewer(napari.Viewer):
         )
 
 
-with napari.gui_qt():
-    viewer = DLCViewer()
-    # viewer.open('/Users/Jessy/Documents/PycharmProjects/lactic/lactic-jessy-2019-06-16/labeled-data/carllewis')
-    viewer.open('/Users/Jessy/Documents/PycharmProjects/deeplabcut/datasets/MultiMouse-Daniel-2019-12-16/labeled-data/videocompressed0')
-    # viewer.open('/Users/Jessy/Documents/PycharmProjects/deeplabcut/datasets/MultiMouse-Daniel-2019-12-16/config.yaml')
-    # viewer.open('/Users/Jessy/Desktop/exp/multimouse/videocompressed0DLC_resnet50_MultiMouseDec16shuffle1_50000_el.h5')
+def show():
+    with napari.gui_qt():
+        viewer = DLCViewer()
