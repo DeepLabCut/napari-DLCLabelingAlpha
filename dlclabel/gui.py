@@ -15,8 +15,7 @@ class DLCViewer(napari.Viewer):
         super(DLCViewer, self).__init__(title='deeplabcut')
         self.theme = 'light'
         self.class_keymap.update(super(DLCViewer, self).class_keymap)
-        self.layers.events.added.connect(self.on_add)
-        self.layers.events.removed.connect(self.on_remove)
+        self.layers.events.changed.connect(self.on_change)
         self._dropdown_menus = []
 
         # Hack the QSS style sheet to add a KeyPoints layer type icon
@@ -31,6 +30,37 @@ class DLCViewer(napari.Viewer):
         # and passed on to the other layers upon creation.
         self._images_meta = dict()
 
+    def on_change(self, event):
+        if event.type == 'added':
+            layer = event.item
+            if isinstance(layer, Image):
+                # Store the metadata and pass them on to the other layers
+                self._images_meta.update({'paths': layer.metadata['paths'],
+                                          'shape': layer.shape})
+                for layer_ in self.layers:
+                    if not isinstance(layer_, Image):
+                        self._remap_frame_indices(layer_)
+                # Ensure the images are always underneath the other layers
+                n_layers = len(self.layers)
+                if n_layers > 1:
+                    self.layers.move_selected(event.index, 0)
+            elif isinstance(layer, KeyPoints):
+                menu = DualDropdownMenu(layer)
+                self._dropdown_menus.append(
+                    self.window.add_dock_widget(menu, area='bottom')
+                )
+                layer.smart_reset(event=None)  # Update current_label upon loading data
+                self.bind_key('Down', layer.next_keypoint, overwrite=True)
+                self.bind_key('Up', layer.prev_keypoint, overwrite=True)
+        elif event.type == 'removed':
+            layer = event.item
+            if isinstance(layer, KeyPoints):
+                while self._dropdown_menus:
+                    menu = self._dropdown_menus.pop()
+                    self.window.remove_dock_widget(menu)
+            elif isinstance(layer, Image):
+                self._images_meta = dict()
+
     @property
     def current_step(self):
         return self.dims.current_step[0]
@@ -38,27 +68,6 @@ class DLCViewer(napari.Viewer):
     @property
     def n_steps(self):
         return self.dims.nsteps[0]
-
-    def on_add(self, event):
-        layer = event.item
-        if isinstance(layer, Image):
-            # Store the metadata and pass them on to the other layers
-            self._images_meta.update({'paths': layer.metadata['paths'],
-                                      'shape': layer.shape})
-            for layer in self.layers:
-                if not isinstance(layer, Image):
-                    self._remap_frame_indices(layer)
-            # Ensure the images are always underneath the other layers
-            if len(self.layers) > 1:
-                self.layers.move_selected(index=-1, insert=0)
-        elif isinstance(layer, KeyPoints):
-            menu = DualDropdownMenu(layer)
-            self._dropdown_menus.append(
-                self.window.add_dock_widget(menu, area='bottom')
-            )
-            layer.smart_reset(event=None)  # Update current_label upon loading data
-            self.bind_key('Down', layer.next_keypoint, overwrite=True)
-            self.bind_key('Up', layer.prev_keypoint, overwrite=True)
 
     def _remap_frame_indices(self, layer):
         if not self._images_meta:
@@ -93,15 +102,6 @@ class DLCViewer(napari.Viewer):
                 data[:, 0] = np.vectorize(temp.get)(data[:, 0])
             layer.data = data
         layer.metadata.update(self._images_meta)
-
-    def on_remove(self, event):
-        layer = event.item
-        if isinstance(layer, KeyPoints):
-            while self._dropdown_menus:
-                menu = self._dropdown_menus.pop()
-                self.window.remove_dock_widget(menu)
-        elif isinstance(layer, Image):
-            self._images_meta = dict()
 
     def add_points(
         self,
