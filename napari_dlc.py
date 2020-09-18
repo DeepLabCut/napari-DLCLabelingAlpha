@@ -12,6 +12,13 @@ def load_images(path):
 
 
 @napari_hook_implementation(specname='napari_get_reader')
+def load_video(path):
+    if isinstance(path, str) and any(path.endswith(ext) for ext in ['mp4', 'mov', 'avi']):
+        return io.read_video
+    return None
+
+
+@napari_hook_implementation(specname='napari_get_reader')
 def load_labeled_data(path):
     if isinstance(path, str) and path.endswith('h5'):
         return io.read_hdf
