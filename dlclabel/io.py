@@ -66,7 +66,7 @@ def read_video(path):
         [da.from_delayed(lazy_imread(stream, i), shape=shape[1:], dtype=np.uint8)
          for i in range(len(stream))]
     )
-    return [(movie, {'metadata': {'paths': []}}, 'image')]
+    return [(movie,)]
 
 
 def read_video2(path):
@@ -78,7 +78,7 @@ def read_video2(path):
         [da.from_delayed(lazy_imread(i), shape=shape, dtype=np.uint8)
          for i in range(len(stream))]
     )
-    return [(movie, {'metadata': {'paths': []}}, 'image')]
+    return [(movie,)]
 
 
 def handle_path(path):
