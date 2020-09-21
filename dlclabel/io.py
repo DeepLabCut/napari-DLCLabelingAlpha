@@ -111,7 +111,11 @@ def read_hdf(filename):
     nrows = df.shape[0]
     data = np.empty((nrows, 3))
     image_paths = df['level_0']
-    image_inds, paths2inds = misc.encode_categories(image_paths, return_map=True)
+    if np.issubdtype(image_paths.dtype, np.number):
+        image_inds = image_paths.values
+        paths2inds = []
+    else:
+        image_inds, paths2inds = misc.encode_categories(image_paths, return_map=True)
     data[:, 0] = image_inds
     data[:, 1:] = df[['y', 'x']].to_numpy()
     metadata = _populate_metadata(
