@@ -1,4 +1,3 @@
-import cv2
 import dask.array as da
 import numpy as np
 import os
@@ -16,63 +15,9 @@ from skimage.io import imsave
 from skimage.util import img_as_ubyte
 
 
-class Video:
-    def __init__(self, video_path):
-        if not os.path.isfile(video_path):
-            raise ValueError(f'Video path "{video_path}" does not point to a file.')
-        self.path = video_path
-        self.stream = cv2.VideoCapture(video_path)
-        if not self.stream.isOpened():
-            raise IOError('Video could not be opened.')
-        self._n_frames = int(self.stream.get(cv2.CAP_PROP_FRAME_COUNT))
-        self._width = int(self.stream.get(cv2.CAP_PROP_FRAME_WIDTH))
-        self._height = int(self.stream.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        self._frame = np.empty((self._height, self._width, 3), dtype=np.uint8)
-
-    def __len__(self):
-        return self._n_frames
-
-    @property
-    def width(self):
-        return self._width
-
-    @property
-    def height(self):
-        return self._height
-
-    def set_to_frame(self, ind):
-        if ind >= len(self) - 1:
-            ind = len(self) - 1
-        self.stream.set(cv2.CAP_PROP_POS_FRAMES, ind)
-
-    def read_frame(self):
-        self._frame[:] = self.stream.read()[1]
-        return self._frame[..., ::-1]
-
-    def close(self):
-        self.stream.release()
-
-
 def read_video(path):
-    stream = Video(path)
-    shape = (len(stream),) + (stream.width, stream.height, 3)
-
-    def _read_frame(video, ind):
-        video.set_to_frame(ind)
-        return video.read_frame()
-
-    lazy_imread = delayed(_read_frame)
-    movie = da.stack(
-        [da.from_delayed(lazy_imread(stream, i), shape=shape[1:], dtype=np.uint8)
-         for i in range(len(stream))]
-    )
-    return [(movie,)]
-
-
-def read_video2(path):
     stream = PyAVReaderIndexed(path)
     shape = stream.frame_shape
-
     lazy_imread = delayed(stream.get_frame)
     movie = da.stack(
         [da.from_delayed(lazy_imread(i), shape=shape, dtype=np.uint8)
