@@ -50,7 +50,7 @@ class DLCViewer(napari.Viewer):
             elif isinstance(layer, KeyPoints):
                 menu = DualDropdownMenu(layer)
                 self._dropdown_menus.append(
-                    self.window.add_dock_widget(menu, area='bottom')
+                    self.window.add_dock_widget(menu, name='dropdown menus', area='bottom')
                 )
                 layer.smart_reset(event=None)  # Update current_label upon loading data
                 self.bind_key('Down', layer.next_keypoint, overwrite=True)
