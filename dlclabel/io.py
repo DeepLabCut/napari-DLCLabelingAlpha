@@ -6,6 +6,7 @@ import yaml
 from dask_image.imread import imread
 from dlclabel import misc
 from itertools import groupby
+from napari_dlc import SUPPORTED_IMAGES
 from napari.layers import Shapes
 from napari.plugins._builtins import napari_write_shapes
 from skimage.io import imsave
@@ -24,9 +25,17 @@ def handle_path(path):
     if len(paths) == 1:
         path = paths[0]
         if os.path.isdir(path):
-            images = os.path.join(path, '*.png')
+            files = os.listdir(path)
+            images = ''
+            for file in files:
+                if any(file.endswith(ext) for ext in SUPPORTED_IMAGES):
+                    images = os.path.join(path, f'*{os.path.splitext(file)[1]}')
+                    break
+            if not images:
+                raise IOError('No supported images were found.')
+
             datafile = ''
-            for file in os.listdir(path):
+            for file in files:
                 if file.endswith('h5'):
                     datafile = os.path.join(path, file)
                     break

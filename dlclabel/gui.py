@@ -204,4 +204,4 @@ class DLCViewer(napari.Viewer):
 
 def show():
     with napari.gui_qt():
-        viewer = DLCViewer()
+        return DLCViewer()

@@ -2,11 +2,14 @@ from dlclabel import io
 from napari_plugin_engine import napari_hook_implementation
 
 
+SUPPORTED_IMAGES = 'jpg', 'jpeg', 'png'
+
+
 @napari_hook_implementation(tryfirst=True, specname='napari_get_reader')
 def load_images(path):
     if isinstance(path, str):
         path = [path]
-    if path[0].endswith('png'):
+    if any(path[0].endswith(ext) for ext in SUPPORTED_IMAGES):
         return io.read_images
     return None
 
