@@ -1,6 +1,7 @@
 alabaster==0.7.12
 appdirs==1.4.4
 appnope==0.1.0
+attrs==20.2.0
 Babel==2.8.0
 backcall==0.2.0
 black==20.8b1
@@ -18,6 +19,7 @@ HeapDict==1.0.1
 idna==2.10
 imageio==2.9.0
 imagesize==1.2.0
+iniconfig==1.0.1
 ipykernel==5.3.4
 ipython==7.18.1
 ipython-genutils==0.2.0
@@ -44,14 +46,17 @@ pexpect==4.8.0
 pickleshare==0.7.5
 Pillow==7.2.0
 PIMS==0.5
+pluggy==0.13.1
 prompt-toolkit==3.0.7
 psutil==5.7.2
 ptyprocess==0.6.0
+py==1.9.0
 Pygments==2.7.1
 PyOpenGL==3.1.5
 pyparsing==2.4.7
 PyQt5==5.15.1
 PyQt5-sip==12.8.1
+pytest==6.1.0
 python-dateutil==2.8.1
 pytz==2020.1
 PyWavelets==1.1.1
