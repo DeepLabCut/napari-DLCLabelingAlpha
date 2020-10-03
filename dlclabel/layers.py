@@ -3,6 +3,7 @@ from collections import namedtuple
 from dlclabel.misc import CycleEnum
 from enum import auto
 from napari.layers import Points
+from napari.utils.events import Event
 from napari.utils.status_messages import format_float
 from typing import List, Sequence, Union
 
@@ -32,13 +33,11 @@ KeyPoint = namedtuple("KeyPoint", ["label", "id"])
 
 
 class KeyPoints(Points):
-    def __init__(self, data, viewer, **kwargs):
+    def __init__(self, data, **kwargs):
         super(KeyPoints, self).__init__(data, **kwargs)
         self.class_keymap.update(
             super(KeyPoints, self).class_keymap
         )  # Inherit parent class' key bindings
-        self.viewer = viewer
-        self.viewer.dims.events.current_step.connect(self.smart_reset)
         all_pairs = self.metadata["header"].form_individual_bodypart_pairs()
         self._keypoints = [
             KeyPoint(label, id_) for id_, label in all_pairs
@@ -60,6 +59,8 @@ class KeyPoints(Points):
             True: np.array([0, 0, 0, 1]),
             False: np.array([1, 0, 0, 1]),
         }
+
+        self.events.add(query_next_frame=Event)
 
     @Points.bind_key("E")
     def toggle_edge_color(self):
@@ -160,8 +161,7 @@ class KeyPoints(Points):
             self.data = data
         self.selected_data = set()
         if self._label_mode is LabelMode.LOOP:
-            ind = (self.viewer.current_step + 1) % self.viewer.n_steps
-            self.viewer.dims.set_current_step(0, ind)
+            self.events.query_next_frame()
         else:
             self.next_keypoint()
 
@@ -197,7 +197,7 @@ class KeyPoints(Points):
 
     @property
     def current_mask(self) -> Sequence[bool]:
-        return self.data[:, 0] == self.viewer.current_step
+        return np.asarray(self.data[:, 0] == self._slice_indices[0])
 
     def _paste_data(self):
         """Paste only currently unannotated data."""

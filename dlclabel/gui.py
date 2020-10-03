@@ -66,14 +66,6 @@ class DLCViewer(napari.Viewer):
             elif isinstance(layer, Image):
                 self._images_meta = dict()
 
-    @property
-    def current_step(self) -> int:
-        return self.dims.current_step[0]
-
-    @property
-    def n_steps(self) -> int:
-        return self.dims.nsteps[0]
-
     def _remap_frame_indices(self, layer: Layer):
         """Ensure consistency between layers' data and the corresponding images."""
         if not self._images_meta:
@@ -110,6 +102,10 @@ class DLCViewer(napari.Viewer):
             layer.data = data
         layer.metadata.update(self._images_meta)
 
+    def _advance_step(self, event):
+        ind = (self.dims.current_step[0] + 1) % self.dims.nsteps[0]
+        self.dims.set_current_step(0, ind)
+
     def add_points(
         self,
         data=None,
@@ -135,7 +131,7 @@ class DLCViewer(napari.Viewer):
         opacity=1,
         blending="translucent",
         visible=True,
-    ) -> KeyPoints:
+    ) -> Optional[KeyPoints]:
         # Disable the creation of Points layers via the button
         if not properties:
             return
@@ -150,7 +146,6 @@ class DLCViewer(napari.Viewer):
 
         layer = KeyPoints(
             data=data,
-            viewer=self,
             properties=properties,
             text=text,
             symbol=symbol,
@@ -173,6 +168,9 @@ class DLCViewer(napari.Viewer):
             blending=blending,
             visible=visible,
         )
+
+        self.dims.events.current_step.connect(layer.smart_reset, position="last")
+        layer.events.query_next_frame.connect(self._advance_step)
 
         # Hack to avoid napari's silly variable type guess,
         # where property is understood as continuous if
