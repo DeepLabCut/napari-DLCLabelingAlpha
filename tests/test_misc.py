@@ -22,16 +22,10 @@ def test_encode_categories():
 
 
 @pytest.mark.parametrize("is_multi", [False, True])
-def test_dlc_header(is_multi):
-    config = {
-        "multianimalproject": is_multi,
-        "scorer": "user",
-        "individuals": ["ind1", "ind2"],
-        "bodyparts": ["a", "b"],
-        "multianimalbodyparts": ["a", "b"],
-        "uniquebodyparts": ["c"],
-    }
-    header = misc.DLCHeader.from_config(config)
+def test_dlc_header(is_multi, config):
+    cfg = config.copy()
+    cfg["multianimalproject"] = is_multi
+    header = misc.DLCHeader.from_config(cfg)
     assert header.scorer == config["scorer"]
     assert header.coords == ["x", "y"]
     if is_multi:

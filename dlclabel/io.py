@@ -15,7 +15,7 @@ from skimage.util import img_as_ubyte
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 
-def handle_path(path: Union[str, List[str]]) -> Union[str, Sequence[str]]:
+def handle_path(path: Union[str, Sequence[str]]) -> Union[str, Sequence[str]]:
     """Dispatch files in folder to the relevant plugin readers."""
     paths = [path] if isinstance(path, str) else path
     paths = [os.fspath(path) for path in paths]
