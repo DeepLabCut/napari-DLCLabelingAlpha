@@ -192,3 +192,21 @@ class KeyPoints(Points):
     @property
     def current_mask(self):
         return self.data[:, 0] == self.viewer.current_step
+
+    def _paste_data(self):
+        properties = self._clipboard.get('properties')
+        if properties is None:
+            return
+        unannotated = [KeyPoint(label, id_) not in self.annotated_keypoints
+                       for label, id_ in zip(properties['label'], properties['id'])]
+        new_properties = {k: v[unannotated] for k, v in properties.items()}
+        new_indices = (
+                self._clipboard['indices'][:1]
+                + tuple(inds for inds, keep in zip(self._clipboard['indices'][1:], unannotated) if keep)
+        )
+        self._clipboard.pop('properties')
+        self._clipboard.pop('indices')
+        self._clipboard = {k: v[unannotated] for k, v in self._clipboard.items()}
+        self._clipboard['properties'] = new_properties
+        self._clipboard['indices'] = new_indices
+        super(KeyPoints, self)._paste_data()
