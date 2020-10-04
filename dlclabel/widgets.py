@@ -1,13 +1,17 @@
 from collections import defaultdict
-from PyQt5 import QtWidgets
+from dlclabel.layers import KeyPoints
+from PyQt5.QtWidgets import QWidget, QComboBox, QHBoxLayout
+from typing import Optional, Sequence
 
 
-class DropdownMenu(QtWidgets.QComboBox):
-    def __init__(self, labels, parent=None):
+class DropdownMenu(QComboBox):
+    def __init__(
+        self, labels: Sequence[str], parent: Optional[QWidget] = None
+    ):
         super(DropdownMenu, self).__init__(parent)
         self.addItems(labels)
 
-    def update_to(self, text):
+    def update_to(self, text: str):
         index = self.findText(text)
         if index >= 0:
             self.setCurrentIndex(index)
@@ -16,9 +20,9 @@ class DropdownMenu(QtWidgets.QComboBox):
         self.setCurrentIndex(0)
 
 
-class DualDropdownMenu(QtWidgets.QWidget):
-    def __init__(self, layer, parent=None):
-        super(DualDropdownMenu, self).__init__(parent)
+class KeypointsDropdownMenu(QWidget):
+    def __init__(self, layer: KeyPoints, parent: Optional[QWidget] = None):
+        super(KeypointsDropdownMenu, self).__init__(parent)
         self.layer = layer
         self.layer.events.current_properties.connect(self.update_menus)
 
@@ -38,7 +42,7 @@ class DualDropdownMenu(QtWidgets.QWidget):
         self.menus["label"] = create_dropdown_menu(
             layer, self.id2label[layer.ids[0]], "label"
         )
-        layout = QtWidgets.QHBoxLayout()
+        layout = QHBoxLayout()
         for menu in self.menus.values():
             layout.addWidget(menu)
         self.setLayout(layout)
@@ -50,7 +54,7 @@ class DualDropdownMenu(QtWidgets.QWidget):
             if menu.currentText() != val:
                 menu.update_to(val)
 
-    def refresh_label_menu(self, text):
+    def refresh_label_menu(self, text: str):
         menu = self.menus["label"]
         menu.blockSignals(True)
         menu.clear()

@@ -2,7 +2,7 @@ import napari
 import numpy as np
 from dlclabel.io import handle_path
 from dlclabel.layers import KeyPoints
-from dlclabel.widgets import DualDropdownMenu
+from dlclabel.widgets import KeypointsDropdownMenu
 from napari.layers import Image, Layer
 from typing import List, Optional, Sequence, Union
 
@@ -18,7 +18,7 @@ class DLCViewer(napari.Viewer):
         # Inherit parent class' key bindings
         self.class_keymap.update(super(DLCViewer, self).class_keymap)
         self.layers.events.changed.connect(self.on_change)
-        self._dropdown_menus = []
+        self._dock_widgets = []
 
         # Hack the QSS style sheet to add a KeyPoints layer type icon
         missing_style = """\n\nQLabel#KeyPoints {
@@ -49,21 +49,21 @@ class DLCViewer(napari.Viewer):
                 if n_layers > 1:
                     self.layers.move_selected(event.index, 0)
             elif isinstance(layer, KeyPoints):
-                menu = DualDropdownMenu(layer)
-                self._dropdown_menus.append(
+                menu = KeypointsDropdownMenu(layer)
+                self._dock_widgets.append(
                     self.window.add_dock_widget(
-                        menu, name="dropdown menus", area="bottom"
+                        menu, name="keypoints menu", area="bottom"
                     )
                 )
-                layer.smart_reset(event=None)  # Update current_label upon loading data
+                layer.smart_reset(event=None)  # Update current keypoint upon loading data
                 self.bind_key("Down", layer.next_keypoint, overwrite=True)
                 self.bind_key("Up", layer.prev_keypoint, overwrite=True)
         elif event.type == "removed":
             layer = event.item
             if isinstance(layer, KeyPoints):
-                while self._dropdown_menus:
-                    menu = self._dropdown_menus.pop()
-                    self.window.remove_dock_widget(menu)
+                while self._dock_widgets:
+                    widget = self._dock_widgets.pop()
+                    self.window.remove_dock_widget(widget)
             elif isinstance(layer, Image):
                 self._images_meta = dict()
 
