@@ -33,13 +33,59 @@ KeyPoint = namedtuple("KeyPoint", ["label", "id"])
 
 
 class KeyPoints(Points):
-    def __init__(self, data=None, **kwargs):
+    def __init__(
+        self,
+        data=None,
+        *,
+        properties=None,
+        text=None,
+        symbol="o",
+        size=10,
+        edge_width=0,
+        edge_color="black",
+        edge_color_cycle=None,
+        edge_colormap="viridis",
+        edge_contrast_limits=None,
+        face_color="white",
+        face_color_cycle=None,
+        face_colormap="viridis",
+        face_contrast_limits=None,
+        n_dimensional=False,
+        name="keypoints",
+        metadata=None,
+        scale=None,
+        translate=None,
+        opacity=1,
+        blending="translucent",
+        visible=True,
+    ):
         if data is None:
-            data = np.empty([0, 3])
-        super(KeyPoints, self).__init__(data, **kwargs)
-        self.class_keymap.update(
-            super(KeyPoints, self).class_keymap
-        )  # Inherit parent class' key bindings
+            data = np.empty((0, 3))
+        super(KeyPoints, self).__init__(
+            data,
+            properties=properties,
+            text=text,
+            symbol=symbol,
+            size=size,
+            edge_width=edge_width,
+            edge_color=edge_color,
+            edge_color_cycle=edge_color_cycle,
+            edge_colormap=edge_colormap,
+            edge_contrast_limits=edge_contrast_limits,
+            face_color=face_color,
+            face_color_cycle=face_color_cycle,
+            face_colormap=face_colormap,
+            face_contrast_limits=face_contrast_limits,
+            n_dimensional=n_dimensional,
+            name=name,
+            metadata=metadata,
+            scale=scale,
+            translate=translate,
+            opacity=opacity,
+            blending=blending,
+            visible=visible,
+        )
+        self.class_keymap.update(super(KeyPoints, self).class_keymap)
         all_pairs = self.metadata["header"].form_individual_bodypart_pairs()
         self._keypoints = [
             KeyPoint(label, id_) for id_, label in all_pairs
@@ -49,7 +95,6 @@ class KeyPoints(Points):
 
         # Hack to make text annotation work when labeling from scratch
         if self.text.values is None:
-            text = kwargs["text"]
             fake_text = {"text": text, "n_text": 1, "properties": {text: np.array([])}}
             self.text._set_text(**fake_text)
 
@@ -132,12 +177,9 @@ class KeyPoints(Points):
     @property
     def annotated_keypoints(self) -> List[KeyPoint]:
         mask = self.current_mask
-        keys = self.properties.keys()
-        keypoints = []
-        for values in zip(*[v[mask] for v in self.properties.values()]):
-            dict_ = dict(zip(keys, values))
-            keypoints.append(KeyPoint(label=dict_["label"], id=dict_["id"]))
-        return keypoints
+        labels = self.properties["label"][mask]
+        ids = self.properties["id"][mask]
+        return [KeyPoint(label, id_) for label, id_ in zip(labels, ids)]
 
     @property
     def current_keypoint(self) -> KeyPoint:

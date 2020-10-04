@@ -15,6 +15,7 @@ from typing import List, Optional, Sequence, Union
 class DLCViewer(napari.Viewer):
     def __init__(self):
         super(DLCViewer, self).__init__(title="deeplabcut")
+        # Inherit parent class' key bindings
         self.class_keymap.update(super(DLCViewer, self).class_keymap)
         self.layers.events.changed.connect(self.on_change)
         self._dropdown_menus = []
