@@ -15,7 +15,7 @@ from skimage.util import img_as_ubyte
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 
-def handle_path(path: Union[str, List[str]]) -> Union[str, Sequence[str]]:
+def handle_path(path: Union[str, Sequence[str]]) -> Union[str, Sequence[str]]:
     """Dispatch files in folder to the relevant plugin readers."""
     paths = [path] if isinstance(path, str) else path
     paths = [os.fspath(path) for path in paths]
@@ -100,7 +100,7 @@ def read_config(configname: str) -> List[LayerData]:
         pcutoff=config["pcutoff"],
         colormap=config["colormap"],
     )
-    return [(np.empty([0, 3]), metadata, "points")]
+    return [(None, metadata, "points")]
 
 
 def read_images(path: Union[str, List[str]]) -> List[LayerData]:
