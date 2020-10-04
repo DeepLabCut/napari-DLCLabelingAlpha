@@ -140,10 +140,6 @@ class DLCViewer(napari.Viewer):
         if any(isinstance(layer, KeyPoints) for layer in self.layers):
             return
 
-        if data is None:
-            ndim = max(self.dims.ndim, 2)
-            data = np.empty([0, ndim])
-
         layer = KeyPoints(
             data=data,
             properties=properties,

@@ -100,7 +100,7 @@ def read_config(configname: str) -> List[LayerData]:
         pcutoff=config["pcutoff"],
         colormap=config["colormap"],
     )
-    return [(np.empty([0, 3]), metadata, "points")]
+    return [(None, metadata, "points")]
 
 
 def read_images(path: Union[str, List[str]]) -> List[LayerData]:

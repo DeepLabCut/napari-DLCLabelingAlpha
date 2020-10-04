@@ -33,7 +33,9 @@ KeyPoint = namedtuple("KeyPoint", ["label", "id"])
 
 
 class KeyPoints(Points):
-    def __init__(self, data, **kwargs):
+    def __init__(self, data=None, **kwargs):
+        if data is None:
+            data = np.empty([0, 3])
         super(KeyPoints, self).__init__(data, **kwargs)
         self.class_keymap.update(
             super(KeyPoints, self).class_keymap
