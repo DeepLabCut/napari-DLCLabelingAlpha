@@ -24,7 +24,7 @@ class DualDropdownMenu(QtWidgets.QWidget):
 
         # Map individuals to their respective bodyparts
         self.id2label = defaultdict(list)
-        for keypoint in layer._keypoints:
+        for keypoint in layer.all_keypoints:
             label = keypoint.label
             id_ = keypoint.id
             if label not in self.id2label[id_]:
@@ -32,11 +32,11 @@ class DualDropdownMenu(QtWidgets.QWidget):
 
         self.menus = dict()
         if layer.ids[0]:
-            menu = create_dropdown_menu(layer, list(self.id2label), 'id')
+            menu = create_dropdown_menu(layer, list(self.id2label), "id")
             menu.currentTextChanged.connect(self.refresh_label_menu)
-            self.menus['id'] = menu
-        self.menus['label'] = create_dropdown_menu(
-            layer, self.id2label[layer.ids[0]], 'label'
+            self.menus["id"] = menu
+        self.menus["label"] = create_dropdown_menu(
+            layer, self.id2label[layer.ids[0]], "label"
         )
         layout = QtWidgets.QHBoxLayout()
         for menu in self.menus.values():
@@ -51,7 +51,7 @@ class DualDropdownMenu(QtWidgets.QWidget):
                 menu.update_to(val)
 
     def refresh_label_menu(self, text):
-        menu = self.menus['label']
+        menu = self.menus["label"]
         menu.blockSignals(True)
         menu.clear()
         menu.addItems(self.id2label[text])
@@ -64,7 +64,7 @@ def create_dropdown_menu(layer, items, attr):
     def item_changed(ind):
         current_item = menu.itemText(ind)
         if current_item is not None:
-            setattr(layer, f'current_{attr}', current_item)
+            setattr(layer, f"current_{attr}", current_item)
 
     menu.currentIndexChanged.connect(item_changed)
     return menu

@@ -86,10 +86,7 @@ class KeyPoints(Points):
             visible=visible,
         )
         self.class_keymap.update(super(KeyPoints, self).class_keymap)
-        all_pairs = self.metadata["header"].form_individual_bodypart_pairs()
-        self._keypoints = [
-            KeyPoint(label, id_) for id_, label in all_pairs
-        ]  # Ordered references to all possible keypoints
+        self._all_keypoints = []
         self._label_mode = LabelMode.default()
         self._text.visible = False
 
@@ -108,6 +105,14 @@ class KeyPoints(Points):
         }
 
         self.events.add(query_next_frame=Event)
+
+    @property
+    def all_keypoints(self):
+        if not self._all_keypoints:
+            # Hold ordered references to all possible keypoints
+            all_pairs = self.metadata["header"].form_individual_bodypart_pairs()
+            self._all_keypoints = [KeyPoint(label, id_) for id_, label in all_pairs]
+        return self._all_keypoints
 
     @Points.bind_key("E")
     def toggle_edge_color(self):
@@ -223,21 +228,21 @@ class KeyPoints(Points):
         """Set current keypoint to the first unlabeled one."""
         unannotated = ""
         already_annotated = self.annotated_keypoints
-        for keypoint in self._keypoints:
+        for keypoint in self.all_keypoints:
             if keypoint not in already_annotated:
                 unannotated = keypoint
                 break
-        self.current_keypoint = unannotated if unannotated else self._keypoints[0]
+        self.current_keypoint = unannotated if unannotated else self.all_keypoints[0]
 
     def next_keypoint(self, *args):
-        ind = self._keypoints.index(self.current_keypoint) + 1
-        if ind <= len(self._keypoints) - 1:
-            self.current_keypoint = self._keypoints[ind]
+        ind = self.all_keypoints.index(self.current_keypoint) + 1
+        if ind <= len(self.all_keypoints) - 1:
+            self.current_keypoint = self.all_keypoints[ind]
 
     def prev_keypoint(self, *args):
-        ind = self._keypoints.index(self.current_keypoint) - 1
+        ind = self.all_keypoints.index(self.current_keypoint) - 1
         if ind >= 0:
-            self.current_keypoint = self._keypoints[ind]
+            self.current_keypoint = self.all_keypoints[ind]
 
     @property
     def current_mask(self) -> Sequence[bool]:
