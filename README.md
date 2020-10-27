@@ -8,7 +8,7 @@ A napari-based GUI for fast and interactive annotation and segmentation of image
 To clone the repository locally and install all required packages, use:
 ```sh
 git clone https://github.com/jeylau/DeepLabCut-label.git
-cd dlclabel
+cd DeepLabCut-label
 pip install -r requirements.txt
 ```
 
