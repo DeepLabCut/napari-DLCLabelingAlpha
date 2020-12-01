@@ -166,7 +166,8 @@ def write_hdf(filename: str, data: Any, metadata: Dict) -> Optional[str]:
     if not properties["id"][0]:
         df = df.droplevel("individuals", axis=1)
     df = df.reindex(meta["header"].columns, axis=1)
-    df.index = [meta["paths"][i] for i in df.index]
+    if meta["paths"]:
+        df.index = [meta["paths"][i] for i in df.index]
     df.to_hdf(filename, key="df_with_missing")
     return filename
 
