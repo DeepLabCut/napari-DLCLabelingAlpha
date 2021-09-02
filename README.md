@@ -1,13 +1,16 @@
-# DeepLabCut-label
+# Napari + DeepLabCut Annotation Tool
 
-A napari-based GUI for fast and interactive annotation and segmentation of images.
+Welcome! This is an alpha release of our napari-based GUI for fast and interactive annotation of images for using with DeepLabCut. We will working towards a napari plug-in for annotation, but in the meantime you can use this as a stand-alone GUI! It allows you to load images from a project, annotate, and saves back into the proper spot in your DLC project folder. Please note, as this itself will not be developed as a stand-alone, we are open sourcing it to get community feedback. If you have a feature request, please open an issue! Thank you - teamDLC.
+
 
 ## Installation
 ### from source
 
-To clone the repository locally and install all required packages, use:
+First, you should have DeepLabCut installed as described at https://deeplabcut.github.io/DeepLabCut/docs/intro.html
+
+Then, clone the repository locally and install all required packages, use:
 ```sh
-git clone https://github.com/jeylau/DeepLabCut-label.git
+git clone https://github.com/DeepLabCut/DeepLabCut-label.git
 cd DeepLabCut-label
 pip install -r requirements.txt
 ```
