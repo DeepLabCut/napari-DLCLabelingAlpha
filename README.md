@@ -9,7 +9,7 @@ To clone the repository locally and install all required packages, use:
 ```sh
 git clone https://github.com/jeylau/DeepLabCut-label.git
 cd DeepLabCut-label
-pip install -r requirements.txt
+conda env create -f environment.yml
 ```
 
 ## Use

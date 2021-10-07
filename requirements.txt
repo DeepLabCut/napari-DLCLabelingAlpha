@@ -11,7 +11,7 @@ chardet==3.0.4
 click==7.1.2
 cycler==0.10.0
 dask==2.29.0
-dask-image==0.4.0
+dask-image==0.6.0
 decorator==4.4.2
 docutils==0.16
 freetype-py==2.2.0
@@ -31,15 +31,15 @@ kiwisolver==1.2.0
 MarkupSafe==1.1.1
 matplotlib==3.3.2
 mypy-extensions==0.4.3
-napari==0.3.8
+napari==0.4.0
 napari-plugin-engine==0.1.8
 napari-svg==0.1.4
 networkx==2.5
 numexpr==2.7.1
-numpy==1.19.2
+numpy==1.21.2
 numpydoc==1.1.0
 packaging==20.4
-pandas==1.1.2
+pandas==1.2.4
 parso==0.7.1
 pathspec==0.8.0
 pexpect==4.8.0
@@ -66,8 +66,8 @@ qtconsole==4.7.7
 QtPy==1.9.0
 regex==2020.9.27
 requests==2.24.0
-scikit-image==0.17.2
-scipy==1.5.2
+scikit-image==0.18.3
+scipy==1.7.1
 six==1.15.0
 slicerator==1.0.0
 snowballstemmer==2.0.0
@@ -78,7 +78,6 @@ sphinxcontrib-htmlhelp==1.0.3
 sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.4
-tables==3.6.1
 tifffile==2020.10.1
 toml==0.10.1
 toolz==0.11.1
@@ -87,6 +86,6 @@ traitlets==5.0.4
 typed-ast==1.4.1
 typing-extensions==3.7.4.3
 urllib3==1.25.10
-vispy==0.6.5
+vispy==0.6.6
 wcwidth==0.2.5
 wrapt==1.12.1
