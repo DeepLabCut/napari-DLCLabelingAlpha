@@ -5,11 +5,13 @@ A napari-based GUI for fast and interactive annotation and segmentation of image
 ## Installation
 ### from source
 
+We recommend the use of anaconda (or miniconda).
 To clone the repository locally and install all required packages, use:
 ```sh
-git clone https://github.com/jeylau/DeepLabCut-label.git
+git clone --single-branch https://github.com/jeylau/DeepLabCut-label.git
 cd DeepLabCut-label
 conda env create -f environment.yml
+conda activate dlclabel
 ```
 
 ## Use
