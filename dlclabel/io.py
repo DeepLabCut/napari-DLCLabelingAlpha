@@ -1,7 +1,7 @@
+import glob
 import numpy as np
 import os
 import pandas as pd
-import pims
 import yaml
 from dask_image.imread import imread
 from dlclabel import misc
@@ -108,11 +108,10 @@ def read_images(path: Union[str, List[str]]) -> List[LayerData]:
         root, ext = os.path.splitext(path[0])
         path = os.path.join(os.path.dirname(root), f"*{ext}")
     # Retrieve filepaths exactly as parsed by pims
-    with pims.open(path) as imgs:
-        filepaths = []
-        for filepath in imgs._filepaths:
-            _, *relpath = filepath.rsplit(os.sep, 3)
-            filepaths.append(os.path.join(*relpath))
+    filepaths = []
+    for filepath in sorted(glob.glob(path)):
+        _, *relpath = filepath.rsplit(os.sep, 3)
+        filepaths.append(os.path.join(*relpath))
     params = {"name": "images", "metadata": {"paths": filepaths}}
     return [(imread(path), params, "image")]
 
