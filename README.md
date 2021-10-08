@@ -6,13 +6,15 @@ Welcome! This is an alpha release of our napari-based GUI for fast and interacti
 ## Installation
 ### from source
 
+
 First, you should have DeepLabCut installed as described at https://deeplabcut.github.io/DeepLabCut/docs/intro.html
 
-Then, clone the repository locally and install all required packages, use:
+Then, to clone the repository locally and install all required packages, use:
 ```sh
-git clone https://github.com/DeepLabCut/DeepLabCut-label.git
+git clone --single-branch https://github.com/DeepLabCut/DeepLabCut-label.git
 cd DeepLabCut-label
-pip install -r requirements.txt
+conda env create -f environment.yml
+conda activate dlclabel
 ```
 
 ## Use

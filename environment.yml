@@ -1,0 +1,7 @@
+name: dlclabel
+dependencies:
+  - python=3.9
+  - pip
+  - pytables
+  - pip:
+    - -r requirements.txt
