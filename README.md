@@ -8,7 +8,6 @@ Welcome! This is an alpha release of our napari-based GUI for fast and interacti
 
 
 First, you should have DeepLabCut installed as described at https://deeplabcut.github.io/DeepLabCut/docs/intro.html
-
 Then, to clone the repository locally and install all required packages, use:
 ```sh
 git clone --single-branch https://github.com/DeepLabCut/DeepLabCut-label.git
