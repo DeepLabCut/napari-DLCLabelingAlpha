@@ -56,7 +56,7 @@ in red)
 <img src="https://images.squarespace-cdn.com/content/v1/57f6d51c9f74566f55ecf271/1634122074646-E235DDG75MCO0BBZER95/dlclabeldemo.gif?format=1500w" width="55%">
 </p>
 
-To draw masks, simply add a `Shapes layer` and start drawing polygons over the images. Note, these would not currently be used within DeepLabCut, but could be usefu for other applications.
+To draw masks, simply add a `Shapes layer` and start drawing polygons over the images. Note, these would not currently be used within DeepLabCut, but could be useful for other applications.
 
 **Save:**
 
