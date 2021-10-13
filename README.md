@@ -55,5 +55,6 @@ Mini Demo:
 To draw masks, simply add a `Shapes layer` and start drawing polygons over the images. Note, these would not currently be used within DeepLabCut, but could be usefu for other applications.
 
 Annotations and segmentations are saved with `File > Save Selected Layer(s)...`
-(or its shortcut `Ctrl+S`). Note that when saving segmentation masks, data will be stored into
+(or its shortcut `Ctrl+S`). For convenience, the save file dialog opens automatically into the folder containing your images or your h5 data file.
+Note that when saving segmentation masks, data will be stored into
 a folder bearing the name provided in the dialog window.
