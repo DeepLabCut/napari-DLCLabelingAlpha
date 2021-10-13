@@ -1,5 +1,6 @@
 import napari
 import numpy as np
+import warnings
 from dlclabel.io import handle_path
 from dlclabel.layers import KeyPoints
 from dlclabel.widgets import KeypointsDropdownMenu
@@ -44,7 +45,9 @@ class DLCViewer(napari.Viewer):
                 if paths is None:
                     return
                 # Store the metadata and pass them on to the other layers
-                self._images_meta.update({"paths": paths, "shape": layer.shape})
+                with warnings.catch_warnings():
+                    warnings.simplefilter(action="ignore", category=FutureWarning)
+                    self._images_meta.update({"paths": paths, "shape": layer.shape})
                 for layer_ in self.layers:
                     if not isinstance(layer_, Image):
                         self._remap_frame_indices(layer_)
