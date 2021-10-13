@@ -7,7 +7,7 @@ It allows you to load images from a DLC project, annotate, and saves back into t
 ## Use cases:
 
 -  You should have DeepLabCut installed (see https://deeplabcut.github.io/DeepLabCut/docs/intro.html)
--  The DLC-Napari GUI can be used as an alternative for the [(D) Labeling Frames step](https://deeplabcut.github.io/DeepLabCut/docs/standardDeepLabCut_UserGuide.html#d-label-frames) or the [(K) Refine Label step](https://deeplabcut.github.io/DeepLabCut/docs/standardDeepLabCut_UserGuide.html#k-refine-labels-augmentation-of-the-training-dataset)
+-  This GUI can be used as an alternative for the [(D) Labeling Frames GUI within DeepLabCut](https://deeplabcut.github.io/DeepLabCut/docs/standardDeepLabCut_UserGuide.html#d-label-frames) or the [(K) Refine Label GUI](https://deeplabcut.github.io/DeepLabCut/docs/standardDeepLabCut_UserGuide.html#k-refine-labels-augmentation-of-the-training-dataset).
 -  In other words, complete steps A-C (from [here](https://deeplabcut.github.io/DeepLabCut/docs/standardDeepLabCut_UserGuide.html)) within DeepLabCut, then you can start labeling with this GUI, or re-start labeling with this GUI. You can also use this GUI for refinement of labels.
 
 ## Feedback welcome! 
