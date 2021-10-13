@@ -30,8 +30,8 @@ dlclabel.show()
 All accepted files (config.yaml, images, data files, list of polygon vertices) can be loaded 
 either by dropping them directly onto the canvas or via the File menu.
 
-The easiest way to get started is to drop a folder (typically from the DeepLabCut
-`labeled-data` directory), and—if labeling from scratch, drop the corresponding `config.yaml`
+The easiest way to get started is to drop a folder (typically a folder from within the DeepLabCut
+`labeled-data` directory), and, if labeling from scratch, drop the corresponding `config.yaml`
 to automatically add a` KeyPoints layer` and populate the dropdown menus.
 
 Some useful shortcuts are:
