@@ -35,6 +35,10 @@ class DLCViewer(napari.Viewer):
     def on_change(self, event):
         if event.type == "added":
             layer = event.item
+            root = layer.metadata.get("root")
+            # Hack to have the save dialog open right in the labeled-data folder
+            if root:
+                self.window.qt_viewer._last_visited_dir = root
             if isinstance(layer, Image):
                 paths = layer.metadata.get("paths")
                 if paths is None:

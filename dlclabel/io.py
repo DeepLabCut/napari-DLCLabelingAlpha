@@ -112,7 +112,13 @@ def read_images(path: Union[str, List[str]]) -> List[LayerData]:
     for filepath in sorted(glob.glob(path)):
         _, *relpath = filepath.rsplit(os.sep, 3)
         filepaths.append(os.path.join(*relpath))
-    params = {"name": "images", "metadata": {"paths": filepaths}}
+    params = {
+        "name": "images",
+        "metadata": {
+            "paths": filepaths,
+            "root": os.path.split(filepaths[0])[0]
+        }
+    }
     return [(imread(path), params, "image")]
 
 
@@ -144,6 +150,7 @@ def read_hdf(filename: str) -> List[LayerData]:
         likelihood=df.get("likelihood"),
         paths=list(paths2inds),
     )
+    metadata["metadata"]["root"] = os.path.split(filename)[0]
     return [(data, metadata, "points")]
 
 
