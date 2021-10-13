@@ -34,7 +34,7 @@ The easiest way to get started is to drop a folder (typically a folder from with
 `labeled-data` directory), and, if labeling from scratch, drop the corresponding `config.yaml`
 to automatically add a` KeyPoints layer` and populate the dropdown menus.
 
-Some useful shortcuts are:
+**Tools & shortcuts are:**
 
 - `P` and `S`, to easily switch between labeling and selection mode
 - `M`, to cycle through regular (sequential), quick, and cycle annotation mode (see the description [here](https://github.com/DeepLabCut/DeepLabCut-label/blob/ee71b0e15018228c98db3b88769e8a8f4e2c0454/dlclabel/layers.py#L9-L19))
@@ -42,6 +42,15 @@ Some useful shortcuts are:
 - `E`, to enable edge coloring (by default, if using this in refinement GUI mode, points with a confidence lower than 0.6 are marked
 in red)
 - `F`, to toggle between animal and bodypart color scheme. 
+- `backspace` to delete a point.
+- Check the box "display text" to show the label names on the canvas.
+- To move to another folder, be sure to save (Ctrl+S), then delete the layers, and re-drag/drop the next folder.
+
+Mini Demo:
+
+<p align="center">
+<img src="https://images.squarespace-cdn.com/content/v1/57f6d51c9f74566f55ecf271/1634122074646-E235DDG75MCO0BBZER95/dlclabeldemo.gif?format=1500w" width="55%">
+</p>
 
 To draw masks, simply add a `Shapes layer` and start drawing polygons over the images. Note, these would not currently be used within DeepLabCut, but could be usefu for other applications.
 
