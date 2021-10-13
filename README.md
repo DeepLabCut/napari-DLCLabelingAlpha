@@ -1,13 +1,19 @@
 # Napari + DeepLabCut Annotation Tool
 
 Welcome! This is an **alpha** release of a napari-based GUI for fast and interactive annotation of images with DeepLabCut. 
--  It allows you to load images from a project, annotate, and saves back into the proper spot in your DLC project folder. 
--  You should have DeepLabCut also installed (see https://deeplabcut.github.io/DeepLabCut/docs/intro.html)
--  You should complete steps A-C (from [here](https://deeplabcut.github.io/DeepLabCut/docs/standardDeepLabCut_UserGuide.html)) within DeepLabCut, then you can start labeling with this GUI, or re-start labeling with this GUI. You can also use this for refinement of labels.
--  We are also working on a napari plug-in for annotation that would ultimately replace this, but in the meantime you can use this as a stand-alone GUI.
-    -  Please note, this GUI will not be developed further as a stand-alone, but we are open sourcing it to get community feedback which we can work into the plugin. If you have a feature request or comment, please open an issue! 
 
-  -  Thank you - teamDLC!
+It allows you to load images from a DLC project, annotate, and saves back into the proper spot in your DLC project folder. 
+
+## Use cases:
+
+-  You should have DeepLabCut installed (see https://deeplabcut.github.io/DeepLabCut/docs/intro.html)
+-  The DLC-Napari GUI can be used as an alternative for the [(D) Labeling Frames step](https://deeplabcut.github.io/DeepLabCut/docs/standardDeepLabCut_UserGuide.html#d-label-frames) or the [(K) Refine Label step](https://deeplabcut.github.io/DeepLabCut/docs/standardDeepLabCut_UserGuide.html#k-refine-labels-augmentation-of-the-training-dataset)
+-  In other words, complete steps A-C (from [here](https://deeplabcut.github.io/DeepLabCut/docs/standardDeepLabCut_UserGuide.html)) within DeepLabCut, then you can start labeling with this GUI, or re-start labeling with this GUI. You can also use this GUI for refinement of labels.
+
+## Feedback welcome! 
+
+-  We are working on a [napari plug-in](https://napari.org/plugins/stable/) for annotation that will ultimately replace this, but in the meantime you can already use this alpha-version as a stand-alone GUI.
+-  Please note, this GUI will not be developed further as a stand-alone, but we are open-sourcing it to get community feedback, which we will consider for the plugin. *If you have a feature request or comment, please open an issue!*
 
 
 ## Installation Instructions:
@@ -30,9 +36,7 @@ dlclabel.show()
 All accepted files (config.yaml, images, data files, list of polygon vertices) can be loaded 
 either by dropping them directly onto the canvas or via the File menu.
 
-The easiest way to get started is to drop a folder (typically a folder from within the DeepLabCut
-`labeled-data` directory), and, if labeling from scratch, drop the corresponding `config.yaml`
-to automatically add a` KeyPoints layer` and populate the dropdown menus.
+The easiest way to get started is to drop a folder (typically a folder from within a DeepLabCut' projects `labeled-data` directory), and, if labeling from scratch, drop the corresponding `config.yaml` to automatically add a` KeyPoints layer` and populate the dropdown menus.
 
 **Tools & shortcuts are:**
 
