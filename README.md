@@ -63,5 +63,6 @@ To draw masks, simply add a `Shapes layer` and start drawing polygons over the i
 Annotations and segmentations are saved with `File > Save Selected Layer(s)...`
 (or its shortcut `Ctrl+S`). For convenience, the save file dialog opens automatically into the folder containing your images or your h5 data file. 
 - As a reminder, DLC will only use the H5 file; so be sure if you open already labeled images you save/overwrite the H5. If you label from scratch, you should save the file as `CollectedData_YourName.h5`
-Note that when saving segmentation masks, data will be stored into
+- Note that when saving segmentation masks, data will be stored into
 a folder bearing the name provided in the dialog window.
+- Note,  before selecting `save layer` as as (or `ctrl-S`) make sure the key points layer is selected. If the user clicked on the image(s) layer first, does save as, then closes the window, any labeling work during that session will be lost!
