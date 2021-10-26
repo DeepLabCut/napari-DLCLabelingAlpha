@@ -56,12 +56,13 @@ class DLCViewer(napari.Viewer):
                 if n_layers > 1:
                     self.layers.move_selected(event.index, 0)
             elif isinstance(layer, KeyPoints):
-                menu = KeypointsDropdownMenu(layer)
-                self._dock_widgets.append(
-                    self.window.add_dock_widget(
-                        menu, name="keypoints menu", area="bottom"
+                if not self._dock_widgets:
+                    menu = KeypointsDropdownMenu(layer)
+                    self._dock_widgets.append(
+                        self.window.add_dock_widget(
+                            menu, name="keypoints menu", area="bottom"
+                        )
                     )
-                )
                 layer.smart_reset(event=None)  # Update current keypoint upon loading data
                 self.bind_key("Down", layer.next_keypoint, overwrite=True)
                 self.bind_key("Up", layer.prev_keypoint, overwrite=True)
@@ -142,10 +143,6 @@ class DLCViewer(napari.Viewer):
     ) -> Optional[KeyPoints]:
         # Disable the creation of Points layers via the button
         if not properties:
-            return
-
-        # Only allow one KeyPoints layer to live at a time
-        if any(isinstance(layer, KeyPoints) for layer in self.layers):
             return
 
         layer = KeyPoints(
