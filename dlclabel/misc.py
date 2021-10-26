@@ -76,6 +76,10 @@ class DLCHeader:
     def scorer(self) -> str:
         return self._get_unique("scorer")[0]
 
+    @scorer.setter
+    def scorer(self, scorer: str):
+        self.columns = self.columns.set_levels([scorer], level="scorer")
+
     @property
     def individuals(self) -> List[str]:
         individuals = self._get_unique("individuals")
