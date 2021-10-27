@@ -4,4 +4,4 @@ dependencies:
   - pip
   - pytables
   - pip:
-    - -r requirements.txt
+    - . --use-feature=in-tree-build

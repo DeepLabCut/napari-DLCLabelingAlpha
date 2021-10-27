@@ -6,13 +6,15 @@ import yaml
 from dask_image.imread import imread
 from dlclabel import misc
 from itertools import groupby
-from napari_dlc import SUPPORTED_IMAGES
 from napari.layers import Shapes
 from napari.plugins._builtins import napari_write_shapes
 from napari.types import LayerData
 from skimage.io import imsave
 from skimage.util import img_as_ubyte
 from typing import Any, Dict, List, Optional, Sequence, Union
+
+
+SUPPORTED_IMAGES = "jpg", "jpeg", "png"
 
 
 def handle_path(path: Union[str, Sequence[str]]) -> Union[str, Sequence[str]]:
