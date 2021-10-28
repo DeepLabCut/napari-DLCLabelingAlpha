@@ -4,14 +4,11 @@ from napari.types import ReaderFunction, WriterFunction
 from typing import Any, Dict, List, Optional, Union
 
 
-SUPPORTED_IMAGES = "jpg", "jpeg", "png"
-
-
 @napari_hook_implementation(tryfirst=True, specname="napari_get_reader")
 def load_images(path: Union[str, List[str]]) -> Optional[ReaderFunction]:
     if isinstance(path, str):
         path = [path]
-    if any(path[0].endswith(ext) for ext in SUPPORTED_IMAGES):
+    if any(path[0].endswith(ext) for ext in io.SUPPORTED_IMAGES):
         return io.read_images
     return None
 
