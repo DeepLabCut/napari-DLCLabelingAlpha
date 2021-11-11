@@ -39,8 +39,8 @@ def handle_path(path: Union[str, Sequence[str]]) -> Union[str, Sequence[str]]:
 
             datafile = ""
             for file in files:
-                if file.endswith("h5"):
-                    datafile = os.path.join(path, file)
+                if file.endswith(".h5"):
+                    datafile = os.path.join(path, "*.h5")
                     break
             if datafile:
                 return [images, datafile]
@@ -92,9 +92,13 @@ def _populate_metadata(
     }
 
 
+def _load_config(config_path: str):
+    with open(config_path) as file:
+        return yaml.safe_load(file)
+
+
 def read_config(configname: str) -> List[LayerData]:
-    with open(configname) as file:
-        config = yaml.safe_load(file)
+    config = _load_config(configname)
     header = misc.DLCHeader.from_config(config)
     metadata = _populate_metadata(
         header,
@@ -102,6 +106,7 @@ def read_config(configname: str) -> List[LayerData]:
         pcutoff=config["pcutoff"],
         colormap=config["colormap"],
     )
+    metadata["name"] = f"CollectedData_{config['scorer']}"
     return [(None, metadata, "points")]
 
 
@@ -118,47 +123,49 @@ def read_images(path: Union[str, List[str]]) -> List[LayerData]:
         "name": "images",
         "metadata": {
             "paths": filepaths,
-            "root": os.path.split(filepaths[0])[0]
+            "root": os.path.split(path)[0]
         }
     }
     return [(imread(path), params, "image")]
 
 
 def read_hdf(filename: str) -> List[LayerData]:
-    temp = pd.read_hdf(filename)
-    header = misc.DLCHeader(temp.columns)
-    temp = temp.droplevel("scorer", axis=1)
-    if "individuals" not in temp.columns.names:
-        # Append a fake level to the MultiIndex
-        # to make it look like a multi-animal DataFrame
-        old_idx = temp.columns.to_frame()
-        old_idx.insert(0, "individuals", "")
-        temp.columns = pd.MultiIndex.from_frame(old_idx)
-    df = temp.stack(["individuals", "bodyparts"]).reset_index()
-    nrows = df.shape[0]
-    data = np.empty((nrows, 3))
-    image_paths = df["level_0"]
-    if np.issubdtype(image_paths.dtype, np.number):
-        image_inds = image_paths.values
-        paths2inds = []
-    else:
-        image_inds, paths2inds = misc.encode_categories(image_paths, return_map=True)
-    data[:, 0] = image_inds
-    data[:, 1:] = df[["y", "x"]].to_numpy()
-    metadata = _populate_metadata(
-        header,
-        labels=df["bodyparts"],
-        ids=df["individuals"],
-        likelihood=df.get("likelihood"),
-        paths=list(paths2inds),
-    )
-    metadata["metadata"]["root"] = os.path.split(filename)[0]
-    return [(data, metadata, "points")]
+    layers = []
+    for filename in glob.glob(filename):
+        temp = pd.read_hdf(filename)
+        header = misc.DLCHeader(temp.columns)
+        temp = temp.droplevel("scorer", axis=1)
+        if "individuals" not in temp.columns.names:
+            # Append a fake level to the MultiIndex
+            # to make it look like a multi-animal DataFrame
+            old_idx = temp.columns.to_frame()
+            old_idx.insert(0, "individuals", "")
+            temp.columns = pd.MultiIndex.from_frame(old_idx)
+        df = temp.stack(["individuals", "bodyparts"]).reset_index()
+        nrows = df.shape[0]
+        data = np.empty((nrows, 3))
+        image_paths = df["level_0"]
+        if np.issubdtype(image_paths.dtype, np.number):
+            image_inds = image_paths.values
+            paths2inds = []
+        else:
+            image_inds, paths2inds = misc.encode_categories(image_paths, return_map=True)
+        data[:, 0] = image_inds
+        data[:, 1:] = df[["y", "x"]].to_numpy()
+        metadata = _populate_metadata(
+            header,
+            labels=df["bodyparts"],
+            ids=df["individuals"],
+            likelihood=df.get("likelihood"),
+            paths=list(paths2inds),
+        )
+        metadata["name"] = os.path.split(filename)[1].split(".")[0]
+        metadata["metadata"]["root"] = os.path.split(filename)[0]
+        layers.append((data, metadata, "points"))
+    return layers
 
 
 def write_hdf(filename: str, data: Any, metadata: Dict) -> Optional[str]:
-    file, _ = os.path.splitext(filename)
-    filename = file + ".h5"
     temp = pd.DataFrame(data[:, -1:0:-1], columns=["x", "y"])
     properties = metadata["properties"]
     meta = metadata["metadata"]
@@ -176,7 +183,35 @@ def write_hdf(filename: str, data: Any, metadata: Dict) -> Optional[str]:
     df = df.reindex(meta["header"].columns, axis=1)
     if meta["paths"]:
         df.index = [meta["paths"][i] for i in df.index]
-    df.to_hdf(filename, key="df_with_missing")
+    name = metadata["name"]
+    root = meta["root"]
+    if "machine" in name:  # We are attempting to save refined model predictions
+        df.drop("likelihood", axis=1, level="coords", inplace=True)
+        header = misc.DLCHeader(df.columns)
+        gt_file = ""
+        for file in os.listdir(root):
+            if file.startswith("CollectedData") and file.endswith("h5"):
+                gt_file = file
+                break
+        if gt_file:  # Refined predictions must be merged into the existing data
+            df_gt = pd.read_hdf(os.path.join(root, gt_file))
+            new_scorer = df_gt.columns.get_level_values("scorer")[0]
+            header.scorer = new_scorer
+            df.columns = header.columns
+            df = pd.concat((df, df_gt))
+            df = df[~df.index.duplicated(keep="first")]
+            name = os.path.splitext(gt_file)[0]
+        else:
+            # Let us fetch the config.yaml file to get the scorer name...
+            project_folder = root.rsplit(os.sep, 2)[0]
+            config = _load_config(os.path.join(project_folder, "config.yaml"))
+            new_scorer = config["scorer"]
+            header.scorer = new_scorer
+            df.columns = header.columns
+            name = f"CollectedData_{new_scorer}"
+    df.sort_index(inplace=True)
+    filename = name + ".h5"
+    df.to_hdf(os.path.join(root, filename), key="df_with_missing")
     return filename
 
 

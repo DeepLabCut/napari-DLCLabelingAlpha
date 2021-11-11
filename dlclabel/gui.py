@@ -5,12 +5,47 @@ from dlclabel.io import handle_path
 from dlclabel.layers import KeyPoints
 from dlclabel.widgets import KeypointsDropdownMenu
 from napari.layers import Image, Layer
+from PyQt5.QtWidgets import QMessageBox, QFileDialog
 from typing import List, Optional, Sequence, Union
 
 
 # TODO Add vectors for paths trajectory
 # TODO Add video reader plugin
 # TODO Refactor KeyPoints with KeyPointsData
+
+
+# Hack to save a KeyPoints layer without showing the Save dialog
+def _save_layers_dialog(self, selected=False):
+    """Save layers (all or selected) to disk, using ``LayerList.save()``.
+
+    Parameters
+    ----------
+    selected : bool
+        If True, only layers that are selected in the viewer will be saved.
+        By default, all layers are saved.
+    """
+    selected_layers = self.viewer.layers.selected
+    msg = ""
+    if not len(self.viewer.layers):
+        msg = "There are no layers in the viewer to save"
+    elif selected and not len(selected_layers):
+        msg = (
+            'Please select one or more layers to save,'
+            '\nor use "Save all layers..."'
+        )
+    if msg:
+        QMessageBox.warning(self, "Nothing to save", msg, QMessageBox.Ok)
+        return
+    if len(selected_layers) == 1 and isinstance(selected_layers[0], KeyPoints):
+        self.viewer.layers.save("", selected=True)
+    else:
+        filename, _ = QFileDialog.getSaveFileName(
+            parent=self,
+            caption=f'Save {"selected" if selected else "all"} layers',
+            directory=self._last_visited_dir,  # home dir by default
+        )
+        if filename:
+            self.viewer.layers.save(filename, selected=selected)
 
 
 class DLCViewer(napari.Viewer):
@@ -27,6 +62,18 @@ class DLCViewer(napari.Viewer):
         }"""
         self.window.raw_stylesheet += missing_style
         self.window._update_palette(None)
+
+        # Substitute default menu action with custom one
+        for action in self.window.file_menu.actions():
+            if "save selected layer" in action.text().lower():
+                action.disconnect()
+                action.triggered.connect(
+                    lambda: _save_layers_dialog(
+                        self.window.qt_viewer,
+                        selected=True,
+                    )
+                )
+                break
 
         # Storage for extra image metadata that are relevant to other layers.
         # These are updated anytime images are added to the Viewer
@@ -56,12 +103,13 @@ class DLCViewer(napari.Viewer):
                 if n_layers > 1:
                     self.layers.move_selected(event.index, 0)
             elif isinstance(layer, KeyPoints):
-                menu = KeypointsDropdownMenu(layer)
-                self._dock_widgets.append(
-                    self.window.add_dock_widget(
-                        menu, name="keypoints menu", area="bottom"
+                if not self._dock_widgets:
+                    menu = KeypointsDropdownMenu(layer)
+                    self._dock_widgets.append(
+                        self.window.add_dock_widget(
+                            menu, name="keypoints menu", area="bottom"
+                        )
                     )
-                )
                 layer.smart_reset(event=None)  # Update current keypoint upon loading data
                 self.bind_key("Down", layer.next_keypoint, overwrite=True)
                 self.bind_key("Up", layer.prev_keypoint, overwrite=True)
@@ -142,10 +190,6 @@ class DLCViewer(napari.Viewer):
     ) -> Optional[KeyPoints]:
         # Disable the creation of Points layers via the button
         if not properties:
-            return
-
-        # Only allow one KeyPoints layer to live at a time
-        if any(isinstance(layer, KeyPoints) for layer in self.layers):
             return
 
         layer = KeyPoints(
