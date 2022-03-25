@@ -152,7 +152,13 @@ def read_hdf(filename: str) -> List[LayerData]:
         df = temp.stack(["individuals", "bodyparts"]).reset_index()
         nrows = df.shape[0]
         data = np.empty((nrows, 3))
-        image_paths = df["level_0"]
+
+        # Support path-agnostic MultiIndex (DLC v2.2.0.4+)
+        if 'level_1' in df.columns and 'level_2' in df.columns:
+            image_paths = df[['level_0', 'level_1', 'level_2']].agg(os.path.sep.join, axis=1)
+        else:
+            image_paths = df["level_0"]
+
         if np.issubdtype(image_paths.dtype, np.number):
             image_inds = image_paths.values
             paths2inds = []
@@ -204,6 +210,9 @@ def write_hdf(filename: str, data: Any, metadata: Dict) -> Optional[str]:
 
     if meta["paths"]:
         df.index = [meta["paths"][i] for i in df.index]
+        # Create path-agnostic MultiIndex (DLC v2.2.0.4+)
+        splits = tuple(df.index.str.split(os.path.sep))
+        df.index = pd.MultiIndex.from_tuples(splits)
         # Take the relative path of the first image in `paths`, split off
         # the image name, and append it to the DLC project root directory
         # to get the absolute path to the image folder.
