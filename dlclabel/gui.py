@@ -1,13 +1,15 @@
-import napari
-import numpy as np
 import warnings
-from dlclabel.io import handle_path
-from dlclabel.layers import KeyPoints
-from dlclabel.widgets import KeypointsDropdownMenu
-from napari.layers import Image, Layer
-from PyQt5.QtWidgets import QMessageBox, QFileDialog
 from typing import List, Optional, Sequence, Union
 
+import napari
+import numpy as np
+from napari.layers import Image, Layer
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
+
+from dlclabel.io import handle_path
+from dlclabel.layers import KeyPoints
+from dlclabel.misc import to_os_dir_sep
+from dlclabel.widgets import KeypointsDropdownMenu
 
 # TODO Add vectors for paths trajectory
 # TODO Add video reader plugin
@@ -127,10 +129,16 @@ class DLCViewer(napari.Viewer):
         if not self._images_meta:
             return
 
-        new_paths = self._images_meta["paths"]
+        # Make missing frame detection independent of OS directory separator:
+        # if existing "CollectedData" or "machinelabels" file contains relative
+        # image paths using a directory separator different from the OS on which
+        # this scirpt is run, then the matchin of image paths fails and missing
+        # frames are detected erroneously.
+        new_paths = [to_os_dir_sep(p) for p in self._images_meta["paths"]]
         paths = layer.metadata.get("paths")
+
         if paths is not None and np.any(layer.data):
-            paths_map = dict(zip(range(len(paths)), paths))
+            paths_map = dict(zip(range(len(paths)), map(to_os_dir_sep, paths)))
             # Discard data if there are missing frames
             missing = [i for i, path in paths_map.items() if path not in new_paths]
             if missing:

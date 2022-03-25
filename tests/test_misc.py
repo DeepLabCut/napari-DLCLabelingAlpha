@@ -1,3 +1,4 @@
+import os
 import pytest
 from dlclabel import misc
 
@@ -47,3 +48,15 @@ def test_cycle_enum():
     assert next(cycle_enum) is cycle_enum.ITEM2
     assert next(cycle_enum) is cycle_enum.ITEM3
     assert next(cycle_enum) is cycle_enum.ITEM1
+
+
+def test_to_os_dir_sep():
+    path = r'labeled-data\img folder1'
+    expected = 'labeled-data/img folder1' \
+        if os.path.sep == '/' else path
+    assert misc.to_os_dir_sep(path) == expected
+
+    path = r'labeled-data/img folder1'
+    expected = r'labeled-data\img folder1' \
+        if os.path.sep == '\\' else path
+    assert misc.to_os_dir_sep(path) == expected

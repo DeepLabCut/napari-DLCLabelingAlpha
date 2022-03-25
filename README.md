@@ -58,11 +58,67 @@ in red)
 
 To draw masks, simply add a `Shapes layer` and start drawing polygons over the images. Note, these would not currently be used within DeepLabCut, but could be useful for other applications.
 
-**Save:**
+### Save Layers
 
 Annotations and segmentations are saved with `File > Save Selected Layer(s)...`
 (or its shortcut `Ctrl+S`). For convenience, the save file dialog opens automatically into the folder containing your images or your h5 data file. 
 - As a reminder, DLC will only use the H5 file; so be sure if you open already labeled images you save/overwrite the H5. If you label from scratch, you should save the file as `CollectedData_YourName.h5`
 - Note that when saving segmentation masks, data will be stored into
 a folder bearing the name provided in the dialog window.
-- Note,  before selecting `save layer` as as (or `ctrl-S`) make sure the key points layer is selected. If the user clicked on the image(s) layer first, does save as, then closes the window, any labeling work during that session will be lost!
+- Note,  before selecting `save layer` as as (or `Ctrl+S`) make sure the key points layer is selected. If the user clicked on the image(s) layer first, does save as, then closes the window, any labeling work during that session will be lost!
+
+## Workflow
+
+Suggested workflows, depending on the image folder contents:
+
+1. **Labelling from scratch** – the image folder does not contain `CollectedData_<ScorerName>.h5` file.
+
+    Open *napari* as described in [Open GUI & Usage](#open-gui--usage) and open an image folder together with the DeepLabCut project's `config.yaml`.
+    The image folder creates an *image layer* with the images to label.
+    Supported image formats are: `jpg`, `jpeg`, `png`.
+    The `config.yaml` file creates a *keypoints layer*, which holds metadata (such as keypoints read from the config file) necessary for labelling.
+    Select the *keypoints layer* in the layer list (lower left pane on the GUI) and click on the *+*-symbol in the layer controls menu (upper left pane) to start labelling.
+    The current keypoint can be viewed/selected in the keypoints menu (bottom pane).
+    The slider below the displayed image (right pane) allows selecting the image to label.
+
+    To save the labelling progress refer to [Save Layers](#save-layers).
+    If the console window does not display any errors, the image folder should now contain a `CollectedData_<ScorerName>.h5` file.
+    (Note: For convenience, a CSV file with the same name is also saved.)
+
+1. **Resuming labelling** – the image folder contains a `CollectedData_<ScorerName>.h5` file.
+
+    Open *napari* and open an image folder (which needs to contain a `CollectedData_<ScorerName>.h5` file).
+    In this case, it is not necessary to open the DLC project's `config.yaml` file, as all necessary metadata is read from the `h5` data file.
+
+    Saving works as described in *1*.
+
+1. **Refining labels** – the image folder contains a `machinelabels-iter<#>.h5` file.
+
+    The process is analog to *2*.
+
+### Labelling multiple image folders
+
+Labelling multiple image folders has to be done in sequence, i.e., only one image folder can be opened at a time.
+After labelling the images of a particular folder is done and the associated *keypoints layer* has been saved, *all* layers should be removed from the layers list (lower left pane on the GUI) by selecting them and clicking on the trashcan icon.
+Now, another image folder can be labelled, following the process described in *1*, *2*, or *3*, depending on the particular image folder.
+
+## Known Issues
+
+### Cannot load image folder with single image file
+
+The `pims` module fails to read images from a folder with only a single image.
+
+The following error will be raised:
+
+```python
+ValueError: No plugin found capable of reading 'E:\\DLC-Project\\labeled-data\\label-from-scratch\\*.png'.
+```
+
+### Empty `CollectedData` file
+
+If an image folder with an empty `CollectedData_<ScorerName>.h5` file gets opened, i.e.,
+the file does not contain any annotation data, then the following error gets raised:
+
+```python
+ValueError: No plugin found capable of reading '/home/DLC-Project/labeled-data/image-folder/*.h5'.
+```

@@ -1,18 +1,19 @@
 import glob
-import numpy as np
 import os
+from itertools import groupby
+from typing import Any, Dict, List, Optional, Sequence, Union
+
+import numpy as np
 import pandas as pd
 import yaml
 from dask_image.imread import imread
-from dlclabel import misc
-from itertools import groupby
 from napari.layers import Shapes
 from napari.plugins._builtins import napari_write_shapes
 from napari.types import LayerData
 from skimage.io import imsave
 from skimage.util import img_as_ubyte
-from typing import Any, Dict, List, Optional, Sequence, Union
 
+from dlclabel import misc
 
 SUPPORTED_IMAGES = "jpg", "jpeg", "png"
 
@@ -107,6 +108,10 @@ def read_config(configname: str) -> List[LayerData]:
         colormap=config["colormap"],
     )
     metadata["name"] = f"CollectedData_{config['scorer']}"
+    # Set 'root' key to DLC project root directory.  We use this later to
+    # construct the path to any image folder under 'labeled-data' to store
+    # CollectedData files.
+    metadata['metadata']['root'] = os.path.split(configname)[0]
     return [(None, metadata, "points")]
 
 
@@ -120,9 +125,12 @@ def read_images(path: Union[str, List[str]]) -> List[LayerData]:
         _, *relpath = filepath.rsplit(os.sep, 3)
         filepaths.append(os.path.join(*relpath))
     params = {
-        "name": "images",
+        # Set image layer name to image folder name.
+        "name": os.path.split(os.path.dirname(path))[-1],
         "metadata": {
             "paths": filepaths,
+            # XXX: Is root of image layer ever used? Set it to
+            # point to DLC project root directory for consistency?
             "root": os.path.split(path)[0]
         }
     }
@@ -159,8 +167,14 @@ def read_hdf(filename: str) -> List[LayerData]:
             likelihood=df.get("likelihood"),
             paths=list(paths2inds),
         )
+        # Name of CollectedData / machinelabels file.
         metadata["name"] = os.path.split(filename)[1].split(".")[0]
-        metadata["metadata"]["root"] = os.path.split(filename)[0]
+        # We make the assumption here that CollectedData/machinelabel files are
+        # always placed within their ususal location following the DLC project
+        # layout, i.e., they are within an image folder under
+        # <dlc_root>/labeled-data/.
+        # TODO: Add error handling in case the assumption does not hold.
+        metadata["metadata"]["root"] = filename.rsplit(os.sep, 3)[0]
         layers.append((data, metadata, "points"))
     return layers
 
@@ -175,26 +189,39 @@ def write_hdf(filename: str, data: Any, metadata: Dict) -> Optional[str]:
     temp["likelihood"] = properties["likelihood"]
     temp["scorer"] = meta["header"].scorer
     df = temp.set_index(["scorer", "individuals", "bodyparts", "inds"]).stack()
-    df.index = df.index.set_names("coords", -1)
+    df.index = df.index.set_names("coords", level=-1)
     df = df.unstack(["scorer", "individuals", "bodyparts", "coords"])
     df.index.name = None
-    if not properties["id"][0]:
+    if not properties["id"].size:  # 'id' array with 0 entries
         df = df.droplevel("individuals", axis=1)
     df = df.reindex(meta["header"].columns, axis=1)
+    root = meta["root"]
+
+    # XXX: Can 'paths' value be empty?
+    # In case 'paths' is empty, store CollectedData under DLC project root.
+    # Does this make sense or should an error be raised?
+    img_folder = root
+
     if meta["paths"]:
         df.index = [meta["paths"][i] for i in df.index]
+        # Take the relative path of the first image in `paths`, split off
+        # the image name, and append it to the DLC project root directory
+        # to get the absolute path to the image folder.
+        img_folder = os.path.join(root, os.path.split(meta['paths'][0])[0])
+
     name = metadata["name"]
-    root = meta["root"]
+
     if "machine" in name:  # We are attempting to save refined model predictions
-        df.drop("likelihood", axis=1, level="coords", inplace=True)
+        # XXX: df does not seem to have a 'likelihood' column => ignore error
+        df.drop("likelihood", axis=1, level="coords", inplace=True, errors='ignore')
         header = misc.DLCHeader(df.columns)
         gt_file = ""
-        for file in os.listdir(root):
+        for file in os.listdir(img_folder):
             if file.startswith("CollectedData") and file.endswith("h5"):
                 gt_file = file
                 break
         if gt_file:  # Refined predictions must be merged into the existing data
-            df_gt = pd.read_hdf(os.path.join(root, gt_file))
+            df_gt = pd.read_hdf(os.path.join(img_folder, gt_file))
             new_scorer = df_gt.columns.get_level_values("scorer")[0]
             header.scorer = new_scorer
             df.columns = header.columns
@@ -203,15 +230,20 @@ def write_hdf(filename: str, data: Any, metadata: Dict) -> Optional[str]:
             name = os.path.splitext(gt_file)[0]
         else:
             # Let us fetch the config.yaml file to get the scorer name...
-            project_folder = root.rsplit(os.sep, 2)[0]
-            config = _load_config(os.path.join(project_folder, "config.yaml"))
+            config = _load_config(os.path.join(root, "config.yaml"))
             new_scorer = config["scorer"]
             header.scorer = new_scorer
             df.columns = header.columns
             name = f"CollectedData_{new_scorer}"
+
     df.sort_index(inplace=True)
-    filename = name + ".h5"
-    df.to_hdf(os.path.join(root, filename), key="df_with_missing")
+
+    filename = name
+    filepath = os.path.join(img_folder, filename)
+    df.to_hdf(filepath + '.h5', key="df_with_missing")
+    # XXX: Temp for debugging: also store dataframe as CSV.
+    df.to_csv(filepath + '.csv')
+    
     return filename
 
 
