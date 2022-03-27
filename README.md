@@ -122,3 +122,14 @@ the file does not contain any annotation data, then the following error gets rai
 ```python
 ValueError: No plugin found capable of reading '/home/DLC-Project/labeled-data/image-folder/*.h5'.
 ```
+
+### Saving keypoints layer without annotations
+
+If none of the opened images has been annotated, the annotation data of the
+keypoints layer is empty, causing the following error:
+
+```python
+TypeError: Cannot infer number of levels from empty list
+
+The above exception was the direct cause of the following exception:
+```

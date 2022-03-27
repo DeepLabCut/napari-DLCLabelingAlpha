@@ -212,6 +212,7 @@ def write_hdf(filename: str, data: Any, metadata: Dict) -> Optional[str]:
         df.index = [meta["paths"][i] for i in df.index]
         # Create path-agnostic MultiIndex (DLC v2.2.0.4+)
         splits = tuple(df.index.str.split(os.path.sep))
+        # Fails if `df` is empty, i.e., no images have been annotated.
         df.index = pd.MultiIndex.from_tuples(splits)
         # Take the relative path of the first image in `paths`, split off
         # the image name, and append it to the DLC project root directory
