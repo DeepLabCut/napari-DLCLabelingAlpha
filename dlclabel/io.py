@@ -54,6 +54,7 @@ def _populate_metadata(
     labels: Optional[Sequence[str]] = None,
     ids: Optional[Sequence[str]] = None,
     likelihood: Optional[Sequence[float]] = None,
+    visibility: Optional[Sequence[int]] = None,
     paths: Optional[List[str]] = None,
     size: Optional[int] = 8,
     pcutoff: Optional[float] = 0.6,
@@ -65,6 +66,8 @@ def _populate_metadata(
         ids = header.individuals
     if likelihood is None:
         likelihood = np.ones(len(labels))
+    if visibility is None:
+        visibility = np.ones(len(labels)) * 2
     label_colors = misc.build_color_cycle(len(header.bodyparts), colormap)
     id_colors = misc.build_color_cycle(len(header.individuals), colormap)
     face_color_cycle_maps = {
@@ -79,9 +82,10 @@ def _populate_metadata(
             "id": list(ids),
             "likelihood": likelihood,
             "valid": likelihood > pcutoff,
+            "visibility": visibility,
         },
         "face_color_cycle": label_colors,
-        "edge_color": "valid",
+        "edge_color": "visibility",
         "edge_color_cycle": ["black", "red"],
         "size": size,
         "metadata": {
@@ -157,6 +161,7 @@ def read_hdf(filename: str) -> List[LayerData]:
             labels=df["bodyparts"],
             ids=df["individuals"],
             likelihood=df.get("likelihood"),
+            visibility=df.get("visibility"),
             paths=list(paths2inds),
         )
         metadata["name"] = os.path.split(filename)[1].split(".")[0]
@@ -173,6 +178,7 @@ def write_hdf(filename: str, data: Any, metadata: Dict) -> Optional[str]:
     temp["individuals"] = properties["id"]
     temp["inds"] = data[:, 0].astype(int)
     temp["likelihood"] = properties["likelihood"]
+    temp["visibility"] = properties["visibility"]
     temp["scorer"] = meta["header"].scorer
     df = temp.set_index(["scorer", "individuals", "bodyparts", "inds"]).stack()
     df.index = df.index.set_names("coords", -1)
@@ -180,7 +186,16 @@ def write_hdf(filename: str, data: Any, metadata: Dict) -> Optional[str]:
     df.index.name = None
     if not properties["id"][0]:
         df = df.droplevel("individuals", axis=1)
-    df = df.reindex(meta["header"].columns, axis=1)
+    columns_orig = meta["header"].columns
+    columns = []
+    for i in range(0, len(columns_orig), 2):
+        lst = list(columns_orig[i])
+        lst[-1] = 'visibility'
+        columns.append(columns_orig[i])
+        columns.append(columns_orig[i + 1])
+        columns.append(lst)
+    columns = pd.MultiIndex.from_tuples(columns)
+    df = df.reindex(columns, axis=1)
     if meta["paths"]:
         df.index = [meta["paths"][i] for i in df.index]
     name = metadata["name"]

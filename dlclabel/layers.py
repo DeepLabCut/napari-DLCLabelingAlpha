@@ -29,7 +29,7 @@ class LabelMode(CycleEnum):
         return cls.SEQUENTIAL
 
 
-KeyPoint = namedtuple("KeyPoint", ["label", "id"])
+KeyPoint = namedtuple("KeyPoint", ["label", "id", "visibility"])
 
 
 class KeyPoints(Points):
@@ -111,7 +111,7 @@ class KeyPoints(Points):
         if not self._all_keypoints:
             # Hold ordered references to all possible keypoints
             all_pairs = self.metadata["header"].form_individual_bodypart_pairs()
-            self._all_keypoints = [KeyPoint(label, id_) for id_, label in all_pairs]
+            self._all_keypoints = [KeyPoint(label, id_, 2) for id_, label in all_pairs]
         return self._all_keypoints
 
     @Points.bind_key("E")
@@ -124,6 +124,15 @@ class KeyPoints(Points):
             "label" if self._face_color_property == "id" else "id"
         )
         self.refresh_color_cycle_map()
+
+    @Points.bind_key("V")
+    def toggle_visibility(self):
+        current_properties = self.current_properties
+        if np.all(current_properties["visibility"] == 1):
+            current_properties["visibility"] = np.array([2])
+        else:
+            current_properties["visibility"] = np.array([1])
+        self.current_properties = current_properties
 
     def refresh_color_cycle_map(self):
         self.face_color_cycle_map = self.metadata["face_color_cycle_maps"][
@@ -184,12 +193,17 @@ class KeyPoints(Points):
         mask = self.current_mask
         labels = self.properties["label"][mask]
         ids = self.properties["id"][mask]
-        return [KeyPoint(label, id_) for label, id_ in zip(labels, ids)]
+        viz = self.properties["visibility"][mask]
+        return [KeyPoint(label, id_, v) for label, id_, v in zip(labels, ids, viz)]
 
     @property
     def current_keypoint(self) -> KeyPoint:
         props = self.current_properties
-        return KeyPoint(label=props["label"][0], id=props["id"][0])
+        return KeyPoint(
+            label=props["label"][0],
+            id=props["id"][0],
+            visibility=props["visibility"][0],
+        )
 
     @current_keypoint.setter
     def current_keypoint(self, keypoint: KeyPoint):
@@ -198,6 +212,7 @@ class KeyPoints(Points):
             current_properties = self.current_properties
             current_properties["label"] = np.asarray([keypoint.label])
             current_properties["id"] = np.asarray([keypoint.id])
+            current_properties["visibility"] = np.asarray([keypoint.visibility])
             self.current_properties = current_properties
 
     def add(self, coord):
@@ -254,8 +269,10 @@ class KeyPoints(Points):
         if properties is None:
             return
         unannotated = [
-            KeyPoint(label, id_) not in self.annotated_keypoints
-            for label, id_ in zip(properties["label"], properties["id"])
+            KeyPoint(label, id_, v) not in self.annotated_keypoints
+            for label, id_, v in zip(
+                properties["label"], properties["id"], properties["visibility"],
+            )
         ]
         new_properties = {k: v[unannotated] for k, v in properties.items()}
         new_indices = self._clipboard["indices"][:1] + tuple(
