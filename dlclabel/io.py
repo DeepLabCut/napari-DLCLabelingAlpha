@@ -111,6 +111,7 @@ def read_config(configname: str) -> List[LayerData]:
         colormap=config["colormap"],
     )
     metadata["name"] = f"CollectedData_{config['scorer']}"
+    metadata['metadata']['root'] = os.path.split(configname)[0]
     return [(None, metadata, "points")]
 
 
