@@ -94,7 +94,11 @@ class DLCViewer(napari.Viewer):
                 # Store the metadata and pass them on to the other layers
                 with warnings.catch_warnings():
                     warnings.simplefilter(action="ignore", category=FutureWarning)
-                    self._images_meta.update({"paths": paths, "shape": layer.shape})
+                    self._images_meta.update({
+                        "paths": paths,
+                        "shape": layer.shape,
+                        "root": root,
+                    })
                 for layer_ in self.layers:
                     if not isinstance(layer_, Image):
                         self._remap_frame_indices(layer_)
