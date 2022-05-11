@@ -194,7 +194,7 @@ def write_hdf(filename: str, data: Any, metadata: Dict) -> Optional[str]:
         columns.append(columns_orig[i])
         columns.append(columns_orig[i + 1])
         columns.append(lst)
-    columns = pd.MultiIndex.from_tuples(columns)
+    columns = pd.MultiIndex.from_tuples(columns, names=columns_orig.names)
     df = df.reindex(columns, axis=1)
     if meta["paths"]:
         df.index = [meta["paths"][i] for i in df.index]
