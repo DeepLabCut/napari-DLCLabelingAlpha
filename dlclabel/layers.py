@@ -1,11 +1,13 @@
-import numpy as np
 from collections import namedtuple
-from dlclabel.misc import CycleEnum
 from enum import auto
+from typing import List, Sequence, Union
+
+import numpy as np
 from napari.layers import Points
 from napari.utils.events import Event
 from napari.utils.status_messages import format_float
-from typing import List, Sequence, Union
+
+from dlclabel.misc import CycleEnum
 
 
 class LabelMode(CycleEnum):

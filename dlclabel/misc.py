@@ -1,10 +1,13 @@
 from __future__ import annotations
-import numpy as np
-import pandas as pd
+
 from enum import Enum, EnumMeta
 from itertools import cycle
-from napari.utils import colormaps
+import os
 from typing import Dict, List, Optional, Sequence, Tuple, Union
+
+import numpy as np
+import pandas as pd
+from napari.utils import colormaps
 
 
 def unsorted_unique(array: Sequence) -> np.ndarray:
@@ -128,3 +131,25 @@ class CycleEnum(Enum, metaclass=CycleEnumMeta):
 
     def __str__(self):
         return self.value
+
+
+def to_os_dir_sep(path: str) -> str:
+    """
+    Replace all directory separators in `path` with `os.path.sep`.
+
+    Raises
+    ------
+    ValueError: if `path` contains both UNIX and Windows directory separators.
+
+    """
+    win_sep, unix_sep = '\\', '/'
+
+    # On UNIX systems, `win_sep` is a valid character in directory and file
+    # names. This function fails if both are present.
+    if win_sep in path and unix_sep in path:
+        raise ValueError(
+            f'"{path}" may not contain both "{win_sep}" and "{unix_sep}"!')
+
+    sep = win_sep if win_sep in path else unix_sep
+
+    return os.path.sep.join(path.split(sep))

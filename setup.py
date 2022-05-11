@@ -14,7 +14,7 @@ with open(filename) as f:
 
 setup(
     name="napari-DeepLabCut",
-    version="0.0.1",
+    version="0.0.2",
     maintainer="Jessy Lauer",
     packages=find_packages(),
     include_package_data=True,
