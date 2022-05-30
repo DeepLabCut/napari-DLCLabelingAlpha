@@ -4,6 +4,10 @@ Welcome! This is an **alpha** release of a napari-based GUI for fast and interac
 
 It allows you to load images from a DLC project, annotate, and saves back into the proper spot in your DLC project folder. 
 
+## News:
+
+- The new napari-plugin is nearly ready for use; please see https://github.com/DeepLabCut/napari-deeplabcut for more information. Thank you to the alpha testers of this repo for feedback that helped guide the plugin development lead by [Jessy Lauer](https://github.com/jeylau), and CZI for funding the plugin work!
+
 ## Use cases:
 
 -  You should have DeepLabCut installed (see https://deeplabcut.github.io/DeepLabCut/docs/intro.html)
